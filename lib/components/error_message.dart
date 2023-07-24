@@ -14,7 +14,11 @@ class ErrorMessage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_rounded, size: 150),
+            Icon(
+              Icons.error_rounded,
+              size: 150,
+              color: kIconColor,
+            ),
             const SizedBox(height: 20),
             Text(
               title,
@@ -25,12 +29,14 @@ class ErrorMessage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(message,
-                style: GoogleFonts.monda(
-                  fontSize: 20,
-                  color: kMidLightColor,
-                ),
-                textAlign: TextAlign.center),
+            Text(
+              message,
+              style: GoogleFonts.monda(
+                fontSize: 20,
+                color: kMidLightColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

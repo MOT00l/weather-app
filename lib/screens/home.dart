@@ -3,6 +3,7 @@ import 'package:clima_weather/models/weather_models.dart';
 import 'package:clima_weather/services/weather.dart';
 import 'package:clima_weather/utilities/weather_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,10 +44,9 @@ class _HomeState extends State<Home> {
     getPremission();
   }
 
-
   ///# GetPremission
   ///
-  /// this function will check if app has accses to gps and if the app doesn't 
+  /// this function will check if app has accses to gps and if the app doesn't
   /// have accses to gps, it will get the premission from user.
   void getPremission() async {
     permission = await geolocatorPlatform.checkPermission();
@@ -66,9 +66,9 @@ class _HomeState extends State<Home> {
   }
 
   ///# GetLocation
-  /// 
+  ///
   /// this function will do two things:
-  /// 1. it will check if app have accses to user current location. 
+  /// 1. it will check if app have accses to user current location.
   /// 2. it will get all the data that app need from [getLocationWeather] function.
   void getLocation() async {
     if (!await geolocatorPlatform.isLocationServiceEnabled()) {
@@ -152,24 +152,30 @@ class _HomeState extends State<Home> {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    getLocation();
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: kCardColor,
-                                    elevation: 1,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                Tooltip(
+                                  message: "Refresh The Data",
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        isDataLoaded = false;
+                                      });
+                                      getLocation();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: kCardColor,
+                                      elevation: 1,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      padding: const EdgeInsets.only(
+                                        right: 5,
+                                        left: 5,
+                                      ),
                                     ),
-                                    padding: const EdgeInsets.only(
-                                      right: 5,
-                                      left: 5,
+                                    child: Icon(
+                                      Icons.refresh,
+                                      color: kHeadIconColor,
                                     ),
-                                  ),
-                                  child: Icon(
-                                    Icons.refresh,
-                                    color: kHeadIconColor,
                                   ),
                                 ),
                                 Padding(
@@ -180,38 +186,41 @@ class _HomeState extends State<Home> {
                                     color: kDarkColor,
                                   ),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      if (iconModeStatus == true) {
-                                        iconMode = const Icon(
-                                          Icons.light_mode,
-                                          color: Color(0xFFFAFAFA),
-                                        );
-                                        iconModeStatus = false;
-                                        lightSwitch();
-                                      } else {
-                                        iconMode = const Icon(
-                                          Icons.nights_stay,
-                                          color: Colors.white60,
-                                        );
-                                        iconModeStatus = true;
-                                        darkSwitch();
-                                      }
-                                    });
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: kCardColor,
-                                    elevation: 1,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                Tooltip(
+                                  message: "Switch Theme",
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        if (iconModeStatus == true) {
+                                          iconMode = const Icon(
+                                            Icons.light_mode,
+                                            color: Color(0xFFFAFAFA),
+                                          );
+                                          iconModeStatus = false;
+                                          lightSwitch();
+                                        } else {
+                                          iconMode = const Icon(
+                                            Icons.nights_stay,
+                                            color: Colors.white60,
+                                          );
+                                          iconModeStatus = true;
+                                          darkSwitch();
+                                        }
+                                      });
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: kCardColor,
+                                      elevation: 1,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      padding: const EdgeInsets.only(
+                                        right: 5,
+                                        left: 5,
+                                      ),
                                     ),
-                                    padding: const EdgeInsets.only(
-                                      right: 5,
-                                      left: 5,
-                                    ),
+                                    child: iconMode,
                                   ),
-                                  child: iconMode,
                                 ),
                               ],
                             ),
@@ -224,36 +233,40 @@ class _HomeState extends State<Home> {
                     flex: 3,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          getPremission();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kCardColor,
-                          elevation: 1,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      child: Tooltip(
+                        message: "Get Your New Location",
+                        child: ElevatedButton(
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            getPremission();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kCardColor,
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        child: SizedBox(
-                          height: 60,
-                          child: Row(
-                            children: [
-                              Text(
-                                "My Location",
-                                style: TextStyle(
-                                  fontSize: 16,
+                          child: SizedBox(
+                            height: 60,
+                            child: Row(
+                              children: [
+                                Text(
+                                  "My Location",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: kHeadIconColor,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Icon(
+                                  Icons.gps_fixed,
                                   color: kHeadIconColor,
                                 ),
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Icon(
-                                Icons.gps_fixed,
-                                color: kHeadIconColor,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
