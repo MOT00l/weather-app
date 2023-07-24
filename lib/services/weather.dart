@@ -14,8 +14,8 @@ class Weather {
   ///
   /// __Note__: Keep in touch about [open weathr api](https://google.com)
   ///
-  /// - Supports from Async function
-  /// - Can use a lot of time
+  /// - Supports from Async function.
+  /// - Can use a lot of time.
 
   Future<dynamic> getLocationWeather() async {
     Location location = Location();
