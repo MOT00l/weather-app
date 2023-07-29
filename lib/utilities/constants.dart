@@ -12,6 +12,8 @@ dynamic kDarkColor = Colors.white24;
 dynamic kIconColor = Colors.white;
 dynamic kCardColor = Colors.white12;
 dynamic kHeadIconColor = Colors.white60;
+dynamic kLoadColor = Colors.white;
+dynamic kLoadingColor = Colors.black;
 
 dynamic kTextFieldTextStyle = TextStyle(
   fontSize: 16,
@@ -35,8 +37,8 @@ dynamic kTextFieldDecoration = InputDecoration(
   ),
   hintText: "Enter city name",
   hintStyle: TextStyle(
-  fontSize: 16,
-  color: kMidLightColor,
-),
+    fontSize: 16,
+    color: kMidLightColor,
+  ),
   prefixIcon: const Icon(Icons.search),
 );

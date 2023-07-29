@@ -21,27 +21,27 @@ class Weather {
     Location location = Location();
     await location.getCurrentLocation();
 
-    // Uri apiRequest() {
-    //   Uri request = Uri(
-    //     path: "https://api.openathermap.weorg/data/2.5/weather",
-    //     queryParameters: {
-    //       "lat": location.latitude,
-    //       "lon": location.longitude,
-    //       "appid": apiKey,
-    //       "units": "metric"
-    //     },
-    //   );
-    //   return request;
-    // }
+    String urirequest() {
+      Uri request = Uri(
+        scheme: "https",
+        host: "api.openweathermap.org",
+        path: "/data/2.5/weather",
+        queryParameters: {
+          "lat": location.latitude.toString(),
+          "lon": location.longitude.toString(),
+          "appid": apiKey,
+          "units": "metric",
+        },
+      );
+      return request.toString();
+    }
 
     NetworkHelper networkHelper = NetworkHelper(
-      "https://api.openweathermap.org/data/2.5/weather?lat=${location.latitude}&lon=${location.longitude}&appid=$apiKey&units=metric",
+      urirequest(),
     );
+
     var weatherData = await networkHelper.getData();
 
     return weatherData;
   }
 }
-
-
-    

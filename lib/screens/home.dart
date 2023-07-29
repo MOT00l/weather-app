@@ -12,6 +12,7 @@ import '../components/details_widget.dart';
 import 'package:clima_weather/components/loading_widget.dart';
 import 'package:clima_weather/utilities/constants.dart';
 import '../models/themes.dart';
+import '../components/refresh_loading.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -33,6 +34,7 @@ class _HomeState extends State<Home> {
   var weatherData;
   String? title, message;
   bool iconModeStatus = true;
+  bool isReloadHappend = false;
   Icon iconMode = Icon(
     Icons.nights_stay,
     color: kMidLightColor,
@@ -97,6 +99,7 @@ class _HomeState extends State<Home> {
       isDataLoaded = true;
       isErrorOccurd = false;
     });
+    reload();
   }
 
   /// LightMode
@@ -109,6 +112,8 @@ class _HomeState extends State<Home> {
     kCardColor = ThemeClass().lightSecondaryTextColor;
     kDarkColor = ThemeClass().lightDetailTextColor;
     kHeadIconColor = ThemeClass().lightIconColor;
+    kLoadColor = ThemeClass().lightLoadColor;
+    kLoadingColor = ThemeClass().lightLoadingColor;
   }
 
   /// DarkMode
@@ -121,6 +126,15 @@ class _HomeState extends State<Home> {
     kCardColor = ThemeClass().darkSecondaryTextColor;
     kDarkColor = ThemeClass().darkDetailTextColor;
     kHeadIconColor = ThemeClass().darkIconColor;
+    kLoadColor = ThemeClass().darkLoadColor;
+    kLoadingColor = ThemeClass().darkLoadingColor;
+  }
+
+  void reload() {
+    if (isReloadHappend == true) {
+      Navigator.pop(context);
+      isReloadHappend = false;
+    }
   }
 
   @override
@@ -153,12 +167,17 @@ class _HomeState extends State<Home> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Tooltip(
-                                  message: "Refresh The Data",
+                                  message: "Will Reload Weather Data",
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      setState(() {
-                                        isDataLoaded = false;
-                                      });
+                                      isReloadHappend = true;
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          context = context;
+                                          return const RefreshLoading();
+                                        },
+                                      );
                                       getLocation();
                                     },
                                     style: ElevatedButton.styleFrom(
@@ -187,7 +206,8 @@ class _HomeState extends State<Home> {
                                   ),
                                 ),
                                 Tooltip(
-                                  message: "Switch Theme",
+                                  message:
+                                      "Will Switch between light and dark Themes",
                                   child: ElevatedButton(
                                     onPressed: () {
                                       setState(() {
@@ -233,40 +253,54 @@ class _HomeState extends State<Home> {
                     flex: 3,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: Tooltip(
-                        message: "Get Your New Location",
-                        child: ElevatedButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            getPremission();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kCardColor,
-                            elevation: 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: SizedBox(
-                            height: 60,
-                            child: Row(
-                              children: [
-                                Text(
-                                  "My Location",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: kHeadIconColor,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Row(
+                                children: [
+                                  Icon(
+                                    Icons.sync,
+                                    color: Colors.white,
                                   ),
-                                ),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Icon(
-                                  Icons.gps_fixed,
+                                  SizedBox(
+                                    width: 5,
+                                  ),
+                                  Text(
+                                    "Your Location Has Been Updated",
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                          getPremission();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kCardColor,
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: SizedBox(
+                          height: 60,
+                          child: Row(
+                            children: [
+                              Text(
+                                "My Location",
+                                style: TextStyle(
+                                  fontSize: 16,
                                   color: kHeadIconColor,
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Icon(
+                                Icons.gps_fixed,
+                                color: kHeadIconColor,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -334,14 +368,14 @@ class _HomeState extends State<Home> {
                   child: SizedBox(
                     height: 90,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        DetailsWidget(
-                          text: "${weatherModel?.feelslike!.round()}°",
-                          detailText: "FEELS LIKE",
-                          color: kHeadIconColor,
-                          colorDetail: kDarkColor,
+                        Expanded(
+                          child: DetailsWidget(
+                            text: "${weatherModel?.feelslike!.round()}°",
+                            detailText: "FEELS LIKE",
+                            color: kHeadIconColor,
+                            colorDetail: kDarkColor,
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -350,11 +384,13 @@ class _HomeState extends State<Home> {
                             color: kDarkColor,
                           ),
                         ),
-                        DetailsWidget(
-                          text: "${weatherModel?.humidity!}%",
-                          detailText: "HUMIDITY",
-                          color: kHeadIconColor,
-                          colorDetail: kDarkColor,
+                        Expanded(
+                          child: DetailsWidget(
+                            text: "${weatherModel?.humidity!}%",
+                            detailText: "HUMIDITY",
+                            color: kHeadIconColor,
+                            colorDetail: kDarkColor,
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -363,11 +399,13 @@ class _HomeState extends State<Home> {
                             color: kDarkColor,
                           ),
                         ),
-                        DetailsWidget(
-                          text: "${weatherModel?.wind!.round()}",
-                          detailText: "WIND",
-                          color: kHeadIconColor,
-                          colorDetail: kDarkColor,
+                        Expanded(
+                          child: DetailsWidget(
+                            text: "${weatherModel?.wind!.round()}",
+                            detailText: "WIND",
+                            color: kHeadIconColor,
+                            colorDetail: kDarkColor,
+                          ),
                         ),
                       ],
                     ),
