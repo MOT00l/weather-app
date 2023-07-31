@@ -1,9 +1,4 @@
-import 'package:clima_weather/components/error_message.dart';
-import 'package:clima_weather/models/weather_models.dart';
-import 'package:clima_weather/services/weather.dart';
-import 'package:clima_weather/utilities/weather_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,6 +8,10 @@ import 'package:clima_weather/components/loading_widget.dart';
 import 'package:clima_weather/utilities/constants.dart';
 import '../models/themes.dart';
 import '../components/refresh_loading.dart';
+import 'package:clima_weather/components/error_message.dart';
+import 'package:clima_weather/models/weather_models.dart';
+import 'package:clima_weather/services/weather.dart';
+import 'package:clima_weather/utilities/weather_icons.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -166,34 +165,43 @@ class _HomeState extends State<Home> {
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Tooltip(
-                                  message: "Will Reload Weather Data",
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      isReloadHappend = true;
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          context = context;
-                                          return const RefreshLoading();
-                                        },
-                                      );
-                                      getLocation();
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: kCardColor,
-                                      elevation: 1,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: const EdgeInsets.only(
-                                        right: 5,
-                                        left: 5,
-                                      ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 2,
+                                      left: 5,
                                     ),
-                                    child: Icon(
-                                      Icons.refresh,
-                                      color: kHeadIconColor,
+                                    child: Tooltip(
+                                      message: "Will Reload Weather Data",
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          isReloadHappend = true;
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              context = context;
+                                              return const RefreshLoading();
+                                            },
+                                          );
+                                          getLocation();
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kCardColor,
+                                          elevation: 1,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          padding: const EdgeInsets.only(
+                                            right: 2,
+                                            left: 2,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.refresh,
+                                          color: kHeadIconColor,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -205,43 +213,92 @@ class _HomeState extends State<Home> {
                                     color: kDarkColor,
                                   ),
                                 ),
-                                Tooltip(
-                                  message:
-                                      "Will Switch between light and dark Themes",
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (iconModeStatus == true) {
-                                          iconMode = const Icon(
-                                            Icons.light_mode,
-                                            color: Color(0xFFFAFAFA),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 2,
+                                      left: 2,
+                                    ),
+                                    child: Tooltip(
+                                      message:
+                                          "Will Switch between light and dark Themes",
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          setState(
+                                            () {
+                                              if (iconModeStatus == true) {
+                                                iconMode = const Icon(
+                                                  Icons.light_mode,
+                                                  color: Color(0xFFFAFAFA),
+                                                );
+                                                iconModeStatus = false;
+                                                lightSwitch();
+                                              } else {
+                                                iconMode = const Icon(
+                                                  Icons.nights_stay,
+                                                  color: Colors.white60,
+                                                );
+                                                iconModeStatus = true;
+                                                darkSwitch();
+                                              }
+                                            },
                                           );
-                                          iconModeStatus = false;
-                                          lightSwitch();
-                                        } else {
-                                          iconMode = const Icon(
-                                            Icons.nights_stay,
-                                            color: Colors.white60,
-                                          );
-                                          iconModeStatus = true;
-                                          darkSwitch();
-                                        }
-                                      });
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: kCardColor,
-                                      elevation: 1,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      padding: const EdgeInsets.only(
-                                        right: 5,
-                                        left: 5,
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kCardColor,
+                                          elevation: 1,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          padding: const EdgeInsets.only(
+                                            right: 2,
+                                            left: 2,
+                                          ),
+                                        ),
+                                        child: iconMode,
                                       ),
                                     ),
-                                    child: iconMode,
                                   ),
                                 ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 15),
+                                  child: VerticalDivider(
+                                    thickness: 1,
+                                    color: kDarkColor,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 5,
+                                      left: 2,
+                                    ),
+                                    child: Tooltip(
+                                      message: "Will to switch to search page",
+                                      child: ElevatedButton(
+                                        onPressed: () {},
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kCardColor,
+                                          elevation: 1,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          padding: const EdgeInsets.only(
+                                            right: 2,
+                                            left: 2,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.search,
+                                          color: kHeadIconColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
                               ],
                             ),
                           ),
@@ -362,7 +419,7 @@ class _HomeState extends State<Home> {
                 padding: const EdgeInsets.all(12.0),
                 child: Card(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   color: kCardColor,
                   child: SizedBox(
