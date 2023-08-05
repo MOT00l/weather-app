@@ -42,3 +42,14 @@ dynamic kTextFieldDecoration = InputDecoration(
   ),
   prefixIcon: const Icon(Icons.search),
 );
+
+class Resourses {
+  static dynamic kMidLightColor = Colors.white60;
+  static dynamic kOverlayColor = Colors.white10;
+  static dynamic kDarkColor = Colors.white24;
+  static dynamic kIconColor = Colors.white;
+  static dynamic kCardColor = Colors.white12;
+  static dynamic kHeadIconColor = Colors.white60;
+  static dynamic kLoadColor = Colors.white;
+  static dynamic kLoadingColor = Colors.black;
+}

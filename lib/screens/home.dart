@@ -1,3 +1,4 @@
+import 'package:clima_weather/screens/search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -276,9 +277,17 @@ class _HomeState extends State<Home> {
                                       left: 2,
                                     ),
                                     child: Tooltip(
-                                      message: "Will to switch to search page",
+                                      message: "Will switch to search page",
                                       child: ElevatedButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const SearchPage(),
+                                            ),
+                                          );
+                                        },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: kCardColor,
                                           elevation: 1,
@@ -298,7 +307,7 @@ class _HomeState extends State<Home> {
                                       ),
                                     ),
                                   ),
-                                )
+                                ),
                               ],
                             ),
                           ),

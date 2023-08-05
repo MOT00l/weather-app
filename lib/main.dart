@@ -1,8 +1,6 @@
+import 'package:clima_weather/screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// import 'package:clima_weather/screens/home.dart';
-import './screens/switch.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,7 +28,7 @@ class MyApp extends StatelessWidget {
       },
       debugShowCheckedModeBanner: false,
       title: 'Clima Weather App',
-      home: const SwitchPage(),
+      home: const Home(),
     );
   }
 }

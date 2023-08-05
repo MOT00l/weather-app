@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../components/details_widget.dart';
+import '../components/loading_widget.dart';
+import '../components/refresh_loading.dart';
+import '../services/networking.dart';
+import '../models/weather_models.dart';
+import '../utilities/constants.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -8,12 +16,231 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final TextEditingController searchController = TextEditingController();
+  bool isDataLoaded = true;
+  bool isReloadHappend = false;
+  late String name;
+  late String city;
+  late var searchData;
+  WeatherModel? weatherModel;
+
+  void getSearchedData() async {
+    Future<dynamic> searchLocationWeather() async {
+      String urirequest() {
+        Uri request = Uri(
+          scheme: "https",
+          host: "api.weatherapi.com",
+          path: "/v1/current.json",
+          queryParameters: {
+            "key": "2cb45a3c631a48e4bdf73856231907",
+            "q": city,
+            "api": "yes"
+          },
+        );
+
+        return request.toString();
+      }
+
+      NetworkHelper networkHelper = NetworkHelper(
+        urirequest(),
+      );
+
+      var weatherData = await networkHelper.getData();
+
+      return weatherData;
+    }
+
+    searchData = await searchLocationWeather();
+    weatherModel = WeatherModel(
+      temperatur: searchData["current"]["temp_c"],
+      location: searchData["location"]["name"] +
+          ", " +
+          searchData["location"]["country"],
+      description: searchData["current"]["condition"]["text"],
+      feelslike: searchData["current"]["feelslike_c"],
+      humidity: searchData["current"]["humidity"],
+      wind: searchData["current"]["wind_kph"],
+    );
+
+    setState(() {
+      isDataLoaded = true;
+    });
+    reload();
+  }
+
+  void reload() {
+    if (isReloadHappend == true) {
+      Navigator.pop(context);
+      isReloadHappend = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("page 2"),
-      ),
-    );
+    if (!isDataLoaded) {
+      return const LoadingWidget();
+    } else {
+      return Scaffold(
+        backgroundColor: kOverlayColor,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 57.0,
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: kHeadIconColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      color: kCardColor,
+                      child: Center(
+                        child: TextField(
+                          controller: searchController,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Enter City Name",
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => searchController.clear(),
+                            ),
+                            prefixIcon: IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () {
+                                isReloadHappend = true;
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    context = context;
+                                    return const RefreshLoading();
+                                  },
+                                );
+                                city = searchController.text;
+                                getSearchedData();
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.location_city,
+                          color: kMidLightColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          weatherModel?.location! ?? "Enter Your City Name",
+                          style: GoogleFonts.monda(
+                            fontSize: 20,
+                            color: kMidLightColor,
+                          ),
+                        )
+                      ],
+                    ),
+                    Text(
+                      "${weatherModel?.temperatur!.round()}°",
+                      style: GoogleFonts.daysOne(
+                        fontSize: 80,
+                        color: kIconColor,
+                      ),
+                    ),
+                    Text(
+                      weatherModel?.description!.toUpperCase() ?? "no data",
+                      style: GoogleFonts.monda(
+                        fontSize: 20,
+                        color: kMidLightColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  color: kCardColor,
+                  child: SizedBox(
+                    height: 90,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: DetailsWidget(
+                            text: "${weatherModel?.feelslike!.round()}°",
+                            detailText: "FEELS LIKE",
+                            color: kHeadIconColor,
+                            colorDetail: kDarkColor,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          child: VerticalDivider(
+                            thickness: 1,
+                            color: kDarkColor,
+                          ),
+                        ),
+                        Expanded(
+                          child: DetailsWidget(
+                            text: "${weatherModel?.humidity!}%",
+                            detailText: "HUMIDITY",
+                            color: kHeadIconColor,
+                            colorDetail: kDarkColor,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          child: VerticalDivider(
+                            thickness: 1,
+                            color: kDarkColor,
+                          ),
+                        ),
+                        Expanded(
+                          child: DetailsWidget(
+                            text: "${weatherModel?.wind!.round()}",
+                            detailText: "WIND",
+                            color: kHeadIconColor,
+                            colorDetail: kDarkColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 }
