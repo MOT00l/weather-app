@@ -2,6 +2,7 @@ class WeatherModel {
   
   String? location, description, icon;
   dynamic temperatur, feelslike, humidity, wind;
+  double? lat, lon;
 
   WeatherModel({
     this.location,
@@ -11,5 +12,7 @@ class WeatherModel {
     this.feelslike,
     this.humidity,
     this.wind,
+    this.lat,
+    this.lon,
   });
 }

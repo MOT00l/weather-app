@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../components/details_widget.dart';
@@ -7,6 +8,7 @@ import '../components/refresh_loading.dart';
 import '../services/networking.dart';
 import '../models/weather_models.dart';
 import '../utilities/constants.dart';
+// import '../utilities/weather_icons.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -22,7 +24,9 @@ class _SearchPageState extends State<SearchPage> {
   late String name;
   late String city;
   late var searchData;
+  late var iconSearchData;
   WeatherModel? weatherModel;
+  int code = 0;
 
   void getSearchedData() async {
     Future<dynamic> searchLocationWeather() async {
@@ -60,13 +64,52 @@ class _SearchPageState extends State<SearchPage> {
       feelslike: searchData["current"]["feelslike_c"],
       humidity: searchData["current"]["humidity"],
       wind: searchData["current"]["wind_kph"],
+      lat: searchData["location"]["lat"],
+      lon: searchData["location"]["lat"],
     );
+
+    // Future<dynamic> iconSearch() async {
+    //   String urirequest() {
+    //     Uri request = Uri(
+    //       scheme: "https",
+    //       host: "api.openweathermap.org",
+    //       path: "/data/2.5/weather",
+    //       queryParameters: {
+    //         "lat": weatherModel?.lat.toString(),
+    //         "lon": weatherModel?.lon.toString(),
+    //         "appid": apiKey,
+    //         "units": "metric",
+    //       },
+    //     );
+    //     return request.toString();
+    //   }
+
+    //   print(urirequest());
+
+    //   NetworkHelper networkHelper = NetworkHelper(
+    //     urirequest(),
+    //   );
+
+    //   var weatherData = await networkHelper.getData();
+
+    //   return weatherData;
+    // }
+
+    // iconSearchData = await iconSearch();
+    // code = iconSearchData["weather"][0]["id"];
+    // weatherModel = WeatherModel(
+    //   icon:
+    //       "assets/weather-icons/${getIconsPreFix(code)}${kWeatherIcons[code.toString()]!["icon"]}.svg",
+    // );
+  
 
     setState(() {
       isDataLoaded = true;
     });
     reload();
   }
+
+  
 
   void reload() {
     if (isReloadHappend == true) {
@@ -85,65 +128,68 @@ class _SearchPageState extends State<SearchPage> {
         body: SafeArea(
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 57.0,
+              Padding(
+                padding: const EdgeInsets.all(6.5),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 57.0,
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Icon(
+                              Icons.arrow_back,
+                              color: kHeadIconColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 4,
                       child: Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: Icon(
-                            Icons.arrow_back,
-                            color: kHeadIconColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 4,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      color: kCardColor,
-                      child: Center(
-                        child: TextField(
-                          controller: searchController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Enter City Name",
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () => searchController.clear(),
-                            ),
-                            prefixIcon: IconButton(
-                              icon: const Icon(Icons.search),
-                              onPressed: () {
-                                isReloadHappend = true;
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    context = context;
-                                    return const RefreshLoading();
-                                  },
-                                );
-                                city = searchController.text;
-                                getSearchedData();
-                              },
+                        color: kCardColor,
+                        child: Center(
+                          child: TextField(
+                            controller: searchController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: "Enter City Name",
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () => searchController.clear(),
+                              ),
+                              prefixIcon: IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: () {
+                                  isReloadHappend = true;
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      context = context;
+                                      return const RefreshLoading();
+                                    },
+                                  );
+                                  city = searchController.text;
+                                  getSearchedData();
+                                },
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Expanded(
                 child: Column(
@@ -166,6 +212,15 @@ class _SearchPageState extends State<SearchPage> {
                         )
                       ],
                     ),
+                    const SizedBox(height: 25),
+                    // SvgPicture.asset(
+                    //   weatherModel?.icon ?? "no data",
+                    //   height: 280,
+                    //   colorFilter: ColorFilter.mode(
+                    //     kIconColor,
+                    //     BlendMode.srcIn,
+                    //   ),
+                    // ),
                     Text(
                       "${weatherModel?.temperatur!.round()}°",
                       style: GoogleFonts.daysOne(
