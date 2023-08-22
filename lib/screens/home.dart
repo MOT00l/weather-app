@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
 import 'package:clima_weather/components/loading_widget.dart';
@@ -138,10 +138,10 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> setThemeData(themeValue) async {
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    pref.setBool("ThemeData", themeValue);
-  }
+  // Future<void> setThemeData(themeValue) async {
+  //   final SharedPreferences pref = await SharedPreferences.getInstance();
+  //   pref.setBool("ThemeData", themeValue);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +250,7 @@ class _HomeState extends State<Home> {
                                               }
                                             },
                                           );
-                                          setThemeData(iconModeStatus);
+                                          // setThemeData(iconModeStatus);
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: kCardColor,
