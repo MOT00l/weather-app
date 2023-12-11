@@ -101,15 +101,12 @@ class _SearchPageState extends State<SearchPage> {
     //   icon:
     //       "assets/weather-icons/${getIconsPreFix(code)}${kWeatherIcons[code.toString()]!["icon"]}.svg",
     // );
-  
 
     setState(() {
       isDataLoaded = true;
     });
     reload();
   }
-
-  
 
   void reload() {
     if (isReloadHappend == true) {
@@ -135,14 +132,14 @@ class _SearchPageState extends State<SearchPage> {
                     Expanded(
                       child: SizedBox(
                         height: 57.0,
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: Icon(
                               Icons.arrow_back,
                               color: kHeadIconColor,

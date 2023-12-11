@@ -9,7 +9,7 @@ class LoadingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white10,
+      backgroundColor: kOverlayColor,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -27,7 +27,7 @@ class LoadingWidget extends StatelessWidget {
                 fontSize: 20,
                 color: kMidLightColor,
               ),
-            )
+            ),
           ],
         ),
       ),

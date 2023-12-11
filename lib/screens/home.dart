@@ -3,17 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../components/details_widget.dart';
 import 'package:clima_weather/components/loading_widget.dart';
 import 'package:clima_weather/utilities/constants.dart';
-import '../models/themes.dart';
-import '../components/refresh_loading.dart';
 import 'package:clima_weather/components/error_message.dart';
 import 'package:clima_weather/models/weather_models.dart';
 import 'package:clima_weather/services/weather.dart';
 import 'package:clima_weather/utilities/weather_icons.dart';
+
+import '../components/details_widget.dart';
+import '../models/themes.dart';
+import '../components/refresh_loading.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -34,23 +35,25 @@ class _HomeState extends State<Home> {
   Weather weather = Weather();
   var weatherData;
   String? title, message;
-  bool iconModeStatus = true;
   bool isReloadHappend = false;
   Icon iconMode = Icon(
     Icons.nights_stay,
     color: kMidLightColor,
   );
+  bool? themeBool;
+  bool? iconModeStatus;
 
   @override
   void initState() {
     super.initState();
     getPremission();
+    userThemeCall();
   }
 
   ///# GetPremission
   ///
   /// this function will check if app has accses to gps and if the app doesn't
-  /// have accses to gps, it will get the premission from user.
+  /// it will grant the premission from user.
   void getPremission() async {
     permission = await geolocatorPlatform.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -138,10 +141,30 @@ class _HomeState extends State<Home> {
     }
   }
 
-  // Future<void> setThemeData(themeValue) async {
-  //   final SharedPreferences pref = await SharedPreferences.getInstance();
-  //   pref.setBool("ThemeData", themeValue);
-  // }
+  void userTheme(bool themeMode) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setBool("ThemeMode", themeMode);
+  }
+
+  void userThemeCall() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    themeBool = preferences.getBool("ThemeMode");
+    if (themeBool == true) {
+      iconMode = const Icon(
+        Icons.nights_stay,
+        color: Colors.white60,
+      );
+      iconModeStatus = true;
+      darkSwitch();
+    } else {
+      iconMode = const Icon(
+        Icons.light_mode,
+        color: Color(0xFFFAFAFA),
+      );
+      iconModeStatus = false;
+      lightSwitch();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +262,7 @@ class _HomeState extends State<Home> {
                                                   color: Color(0xFFFAFAFA),
                                                 );
                                                 iconModeStatus = false;
+                                                userTheme(iconModeStatus!);
                                                 lightSwitch();
                                               } else {
                                                 iconMode = const Icon(
@@ -246,11 +270,11 @@ class _HomeState extends State<Home> {
                                                   color: Colors.white60,
                                                 );
                                                 iconModeStatus = true;
+                                                userTheme(iconModeStatus!);
                                                 darkSwitch();
                                               }
                                             },
                                           );
-                                          // setThemeData(iconModeStatus);
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: kCardColor,
@@ -334,7 +358,7 @@ class _HomeState extends State<Home> {
                                 children: [
                                   Icon(
                                     Icons.sync,
-                                    color: Colors.white,
+                                    color: Colors.black,
                                   ),
                                   SizedBox(
                                     width: 5,
