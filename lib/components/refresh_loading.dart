@@ -43,7 +43,7 @@ class _RefreshLoadingState extends State<RefreshLoading> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SpinKitFadingCircle(
+                      SpinKitPouringHourGlass(
                         color: kLoadingColor,
                         size: 100,
                       ),

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
 import '../components/loading_widget.dart';
 import '../components/refresh_loading.dart';
-import '../services/networking.dart';
 import '../models/weather_models.dart';
+import '../services/networking.dart';
 import '../utilities/constants.dart';
-// import '../utilities/weather_icons.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -28,6 +27,12 @@ class _SearchPageState extends State<SearchPage> {
   WeatherModel? weatherModel;
   int code = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    searchCall();
+  }
+
   void getSearchedData() async {
     Future<dynamic> searchLocationWeather() async {
       String urirequest() {
@@ -36,12 +41,13 @@ class _SearchPageState extends State<SearchPage> {
           host: "api.weatherapi.com",
           path: "/v1/current.json",
           queryParameters: {
-            "key": "2cb45a3c631a48e4bdf73856231907",
+            "key": "2b47384e2a8e40f59b4171832250303",
             "q": city,
             "api": "yes"
           },
         );
 
+        print(request);
         return request.toString();
       }
 
@@ -68,44 +74,13 @@ class _SearchPageState extends State<SearchPage> {
       lon: searchData["location"]["lat"],
     );
 
-    // Future<dynamic> iconSearch() async {
-    //   String urirequest() {
-    //     Uri request = Uri(
-    //       scheme: "https",
-    //       host: "api.openweathermap.org",
-    //       path: "/data/2.5/weather",
-    //       queryParameters: {
-    //         "lat": weatherModel?.lat.toString(),
-    //         "lon": weatherModel?.lon.toString(),
-    //         "appid": apiKey,
-    //         "units": "metric",
-    //       },
-    //     );
-    //     return request.toString();
-    //   }
-
-    //   print(urirequest());
-
-    //   NetworkHelper networkHelper = NetworkHelper(
-    //     urirequest(),
-    //   );
-
-    //   var weatherData = await networkHelper.getData();
-
-    //   return weatherData;
-    // }
-
-    // iconSearchData = await iconSearch();
-    // code = iconSearchData["weather"][0]["id"];
-    // weatherModel = WeatherModel(
-    //   icon:
-    //       "assets/weather-icons/${getIconsPreFix(code)}${kWeatherIcons[code.toString()]!["icon"]}.svg",
-    // );
-
-    setState(() {
-      isDataLoaded = true;
-    });
+    setState(
+      () {
+        isDataLoaded = true;
+      },
+    );
     reload();
+    searchCall();
   }
 
   void reload() {
@@ -113,6 +88,17 @@ class _SearchPageState extends State<SearchPage> {
       Navigator.pop(context);
       isReloadHappend = false;
     }
+  }
+
+  void searchSave(String data) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.setString("wLocation", data);
+  }
+
+  void searchCall() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    weatherModel?.location = preferences.getString("wLocation");
+    print(weatherModel?.location);
   }
 
   @override
@@ -159,11 +145,14 @@ class _SearchPageState extends State<SearchPage> {
                           child: TextField(
                             controller: searchController,
                             decoration: InputDecoration(
+                              contentPadding: EdgeInsets.only(top: 11.5),
                               border: InputBorder.none,
                               hintText: "Enter City Name",
                               suffixIcon: IconButton(
                                 icon: const Icon(Icons.clear),
-                                onPressed: () => searchController.clear(),
+                                onPressed: () {
+                                  searchController.clear();
+                                },
                               ),
                               prefixIcon: IconButton(
                                 icon: const Icon(Icons.search),
@@ -201,23 +190,15 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          weatherModel?.location! ?? "Enter Your City Name",
+                          weatherModel?.location ?? "Enter Your City Name",
                           style: GoogleFonts.monda(
                             fontSize: 20,
                             color: kMidLightColor,
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 25),
-                    // SvgPicture.asset(
-                    //   weatherModel?.icon ?? "no data",
-                    //   height: 280,
-                    //   colorFilter: ColorFilter.mode(
-                    //     kIconColor,
-                    //     BlendMode.srcIn,
-                    //   ),
-                    // ),
                     Text(
                       "${weatherModel?.temperatur!.round()}°",
                       style: GoogleFonts.daysOne(

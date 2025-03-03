@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const apiKey = 'cb1d50cb4d3a7611378de745dfd47b34';
+const apiKey = '76a735efdbbce487f88fe731ef4570a8';
 
 const String baseUrl = "https://api.openathermap.weorg/data/2.5";
 const String apiKeyApplyer = "&appid=$apiKey&units=metric";
@@ -14,6 +14,13 @@ dynamic kCardColor = Colors.white12;
 dynamic kHeadIconColor = Colors.white60;
 dynamic kLoadColor = Colors.white;
 dynamic kLoadingColor = Colors.black;
+
+Icon iconMode = Icon(
+  Icons.nights_stay,
+  color: kMidLightColor,
+);
+bool? themeBool;
+bool? iconModeStatus;
 
 dynamic kTextFieldTextStyle = TextStyle(
   fontSize: 16,

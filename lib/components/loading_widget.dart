@@ -10,22 +10,22 @@ class LoadingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kOverlayColor,
-      body: Center(
+      body: const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SpinKitFadingCircle(
+            SpinKitPouringHourGlass(
               color: kLightColor,
               size: 100,
             ),
-            const SizedBox(
+            SizedBox(
               height: 10,
             ),
             Text(
               'Fetching data...',
               style: TextStyle(
                 fontSize: 20,
-                color: kMidLightColor,
+                color: kLightColor,
               ),
             ),
           ],
