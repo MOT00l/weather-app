@@ -1,6 +1,7 @@
 import 'package:clima_weather/components/error_message.dart';
 import 'package:clima_weather/components/loading_widget.dart';
 import 'package:clima_weather/models/weather_models.dart';
+import 'package:clima_weather/screens/info.dart';
 import 'package:clima_weather/screens/search.dart';
 import 'package:clima_weather/services/weather.dart';
 import 'package:clima_weather/utilities/constants.dart';
@@ -36,12 +37,14 @@ class _HomeState extends State<Home> {
   var weatherData;
   String? title, message;
   bool isReloadHappend = false;
-  // Icon iconMode = Icon(
-  //   Icons.nights_stay,
-  //   color: kMidLightColor,
-  // );
-  // bool? themeBool;
-  // bool? iconModeStatus;
+  Icon iconMode = Icon(
+    Icons.nights_stay,
+    color: kMidLightColor,
+  );
+  bool? themeBool;
+  bool? iconModeStatus;
+  final _controller = SidebarXController(selectedIndex: 0, extended: true);
+  final _key = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -196,25 +199,79 @@ class _HomeState extends State<Home> {
       return const LoadingWidget();
     } else {
       return Scaffold(
-        drawer: SidebarX(
-          controller: SidebarXController(selectedIndex: 1, extended: true),
-          theme: SidebarXTheme(
-            height: 770,
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(12),
+        key: _key,
+        drawer: Padding(
+          padding: EdgeInsets.fromLTRB(0, 33, 0, 0),
+          child: SidebarX(
+            controller: _controller,
+            theme: SidebarXTheme(
+              // width: 100,
+              margin: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Color(0xff353535),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              itemTextPadding: const EdgeInsets.only(left: 12),
+              selectedItemTextPadding: const EdgeInsets.only(left: 12),
+              textStyle: TextStyle(
+                color: Colors.white,
+              ),
+              selectedTextStyle: const TextStyle(color: Colors.white),
+              iconTheme: IconThemeData(
+                color: Colors.white,
+                size: 20,
+              ),
+              selectedIconTheme: const IconThemeData(
+                color: Colors.white,
+                size: 20,
+              ),
             ),
+            extendedTheme: const SidebarXTheme(
+              width: 110,
+              decoration: BoxDecoration(
+                color: Color(0xff353535),
+              ),
+            ),
+            items: [
+              SidebarXItem(
+                icon: Icons.nights_stay,
+                label: "Theme",
+                onTap: () {
+                  theme();
+                },
+              ),
+              SidebarXItem(
+                icon: Icons.refresh,
+                label: "Refresh",
+                onTap: () {
+                  isReloadHappend = true;
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      context = context;
+                      return const RefreshLoading();
+                    },
+                  );
+                  getPremission();
+                  getLocation();
+                },
+              ),
+              SidebarXItem(
+                icon: Icons.info_outline,
+                label: "About",
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      context = context;
+                      return const Info();
+                    },
+                  );
+                },
+              ),
+            ],
           ),
-          items: [
-            SidebarXItem(
-              icon: Icons.home,
-              label: 'Home',
-              onTap: () {
-                theme();
-              },
-            ),
-          ],
         ),
         resizeToAvoidBottomInset: false,
         backgroundColor: kOverlayColor,
@@ -223,239 +280,63 @@ class _HomeState extends State<Home> {
             children: [
               Row(
                 children: [
-                  // child: Expanded(
-                  //   flex: 2,
-                  //   child: Padding(
-                  //     padding: const EdgeInsets.only(
-                  //       left: 10.0,
-                  //       right: 2.0,
-                  //       top: 5,
-                  //     ),
-                  //     child: Card(
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius: BorderRadius.circular(10),
-                  //       ),
-                  //       color: kCardColor,
-                  //       child: SizedBox(
-                  //         height: 60,
-                  //         child: Center(
-                  //           child: Row(
-                  //             mainAxisAlignment:
-                  //                 MainAxisAlignment.spaceEvenly,
-                  //             crossAxisAlignment: CrossAxisAlignment.center,
-                  //             children: [
-                  //               Expanded(
-                  //                 child: Padding(
-                  //                   padding: const EdgeInsets.only(
-                  //                     right: 2,
-                  //                     left: 2,
-                  //                   ),
-                  //                   child: Tooltip(
-                  //                     message:
-                  //                         "Will Switch between light and dark Themes",
-                  //                     child: ElevatedButton(
-                  //                       onPressed: () {
-                  //                         setState(
-                  //                           () {
-                  //                             if (iconModeStatus == true) {
-                  //                               iconMode = const Icon(
-                  //                                 Icons.light_mode,
-                  //                                 color: Color(0xFFFAFAFA),
-                  //                               );
-                  //                               iconModeStatus = false;
-                  //                               userTheme(iconModeStatus!);
-                  //                               lightSwitch();
-                  //                             } else {
-                  //                               iconMode = const Icon(
-                  //                                 Icons.nights_stay,
-                  //                                 color: Colors.white60,
-                  //                               );
-                  //                               iconModeStatus = true;
-                  //                               userTheme(iconModeStatus!);
-                  //                               darkSwitch();
-                  //                             }
-                  //                           },
-                  //                         );
-                  //                       },
-                  //                       style: ElevatedButton.styleFrom(
-                  //                         backgroundColor: kCardColor,
-                  //                         elevation: 1,
-                  //                         shape: RoundedRectangleBorder(
-                  //                           borderRadius:
-                  //                               BorderRadius.circular(10),
-                  //                         ),
-                  //                         padding: const EdgeInsets.only(
-                  //                           right: 2,
-                  //                           left: 2,
-                  //                         ),
-                  //                       ),
-                  //                       child: iconMode,
-                  //                     ),
-                  //                   ),
-                  //                 ),
-                  //               ),
-                  //             ],
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        left: 8.0,
-                        right: 8.0,
-                        top: 5,
-                      ),
-                      child: Icon(
-                        Icons.menu,
-                        color: kHeadIconColor,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 8.0,
+                      top: 10,
                     ),
-                  ),
-                  Expanded(
-                    flex: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        left: 2.0,
-                        right: 2.0,
-                        top: 5,
-                      ),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        color: kCardColor,
-                        child: SizedBox(
-                          height: 60,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "CLIMA WEATHER",
-                                style: GoogleFonts.monda(
-                                  fontSize: 15,
-                                  color: kMidLightColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                    child: SizedBox(
+                      height: 57.0,
+                      width: 85,
+                      child: GestureDetector(
+                        onTap: () {
+                          _key.currentState?.openDrawer();
+                        },
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          color: kCardColor,
+                          child: Icon(
+                            Icons.menu,
+                            color: kHeadIconColor,
                           ),
                         ),
                       ),
                     ),
                   ),
                   Expanded(
-                    flex: 3,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        left: 2.0,
-                        right: 10.0,
-                        top: 5,
-                      ),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        color: kCardColor,
-                        child: SizedBox(
-                          height: 60,
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 2,
-                                      left: 5,
-                                    ),
-                                    child: Tooltip(
-                                      message: "Will Reload Weather Data",
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          isReloadHappend = true;
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              context = context;
-                                              return const RefreshLoading();
-                                            },
-                                          );
-                                          getPremission();
-                                          getLocation();
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: kCardColor,
-                                          elevation: 1,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          padding: const EdgeInsets.only(
-                                            right: 2,
-                                            left: 2,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.refresh,
-                                          color: kHeadIconColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 15),
-                                  child: VerticalDivider(
-                                    thickness: 1,
-                                    color: kDarkColor,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 5,
-                                      left: 2,
-                                    ),
-                                    child: Tooltip(
-                                      message: "Will switch to search page",
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const SearchPage(),
-                                            ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: kCardColor,
-                                          elevation: 1,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          padding: const EdgeInsets.only(
-                                            right: 2,
-                                            left: 2,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.search,
-                                          color: kHeadIconColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                    child: Card(),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      right: 8.0,
+                      top: 10,
+                    ),
+                    child: Center(
+                      child: SizedBox(
+                        height: 57.0,
+                        width: 85,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SearchPage(),
+                              ),
+                            );
+                          },
+                          child: Tooltip(
+                            message: "Will Navigate To Search Page",
+                            child: Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              color: kCardColor,
+                              child: Icon(
+                                Icons.search,
+                                color: kHeadIconColor,
+                              ),
                             ),
                           ),
                         ),
@@ -575,68 +456,23 @@ class _HomeState extends State<Home> {
     }
   }
 }
-
-class ListItems extends StatelessWidget {
-  const ListItems({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView(
-        padding: const EdgeInsets.all(8),
-        children: [
-          InkWell(
-            onTap: () {
-              Navigator.of(context)
-                ..pop()
-                ..push(
-                  MaterialPageRoute<SecondRoute>(
-                    builder: (context) => SecondRoute(),
-                  ),
-                );
-            },
-            child: Container(
-              height: 50,
-              color: Colors.amber[100],
-              child: const Center(child: Text('Entry A')),
-            ),
-          ),
-          const Divider(),
-          Container(
-            height: 50,
-            color: Colors.amber[200],
-            child: const Center(child: Text('Entry B')),
-          ),
-          const Divider(),
-          Container(
-            height: 50,
-            color: Colors.amber[300],
-            child: const Center(child: Text('Entry C')),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class SecondRoute extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Second Route'),
-        automaticallyImplyLeading: false,
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Go back!'),
-        ),
-      ),
-    );
-  }
-}
+// class SecondRoute extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Second Route'),
+//         automaticallyImplyLeading: false,
+//       ),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: () => Navigator.pop(context),
+//           child: const Text('Go back!'),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // class Menu extends StatefulWidget {
 //   const Menu({super.key});

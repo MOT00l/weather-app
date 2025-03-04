@@ -51,7 +51,7 @@ class _RefreshLoadingState extends State<RefreshLoading> {
                         height: 10,
                       ),
                       Text(
-                        'Reloading Data...',
+                        "Refreshing Data...",
                         style: TextStyle(
                           fontSize: 20,
                           color: kLoadingColor,

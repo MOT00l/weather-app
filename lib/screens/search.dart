@@ -126,6 +126,7 @@ class _SearchPageState extends State<SearchPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                            color: kCardColor,
                             child: Icon(
                               Icons.arrow_back,
                               color: kHeadIconColor,
@@ -145,17 +146,23 @@ class _SearchPageState extends State<SearchPage> {
                           child: TextField(
                             controller: searchController,
                             decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(top: 11.5),
+                              contentPadding: EdgeInsets.only(top: 10.5),
                               border: InputBorder.none,
                               hintText: "Enter City Name",
+                              hintStyle: GoogleFonts.monda(
+                                fontSize: 17,
+                                color: kHeadIconColor,
+                              ),
                               suffixIcon: IconButton(
                                 icon: const Icon(Icons.clear),
+                                color: kHeadIconColor,
                                 onPressed: () {
                                   searchController.clear();
                                 },
                               ),
                               prefixIcon: IconButton(
                                 icon: const Icon(Icons.search),
+                                color: kHeadIconColor,
                                 onPressed: () {
                                   isReloadHappend = true;
                                   showDialog(
