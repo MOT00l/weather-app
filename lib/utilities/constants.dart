@@ -14,6 +14,7 @@ dynamic kCardColor = Colors.white12;
 dynamic kHeadIconColor = Colors.white60;
 dynamic kLoadColor = Colors.white;
 dynamic kLoadingColor = Colors.black;
+dynamic kTextColor = Colors.white;
 
 Icon iconMode = Icon(
   Icons.nights_stay,
@@ -59,4 +60,10 @@ class Resourses {
   static dynamic kHeadIconColor = Colors.white60;
   static dynamic kLoadColor = Colors.white;
   static dynamic kLoadingColor = Colors.black;
+}
+
+class SearchError {
+  String searchTitle = "No Data Found";
+  String searchMessage =
+      "Please search a city name to begin seeing the condition of that location";
 }

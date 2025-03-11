@@ -12,6 +12,7 @@ class ThemeClass {
   Color lightIconColor = const Color(0xFFFAFAFA);
   Color lightLoadColor = Colors.black;
   Color lightLoadingColor = Colors.white;
+  Color lightTextColor = Colors.white;
 
   Color darkBackgroundColor = Colors.white10;
   Color darkPrimeryColor = Colors.white;
@@ -21,4 +22,5 @@ class ThemeClass {
   Color darkIconColor = Colors.white60;
   Color darkLoadColor = Colors.white;
   Color darkLoadingColor = Colors.black;
+  Color darkTextColor = Colors.black;
 }

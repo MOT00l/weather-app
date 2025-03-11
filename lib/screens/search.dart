@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
+import '../components/error_message.dart';
 import '../components/loading_widget.dart';
 import '../components/refresh_loading.dart';
 import '../models/weather_models.dart';
@@ -26,6 +27,19 @@ class _SearchPageState extends State<SearchPage> {
   late var iconSearchData;
   WeatherModel? weatherModel;
   int code = 0;
+  bool isErrorOccurd = true;
+  String? title, message;
+  SearchError? searchError;
+  String searchTitle = SearchError().searchTitle;
+  String searchMessage = SearchError().searchMessage;
+  final snackBar = SnackBar(
+    content: Text(
+      "No City Name Was Given",
+      style: TextStyle(color: kTextColor),
+    ),
+    duration: Duration(seconds: 3),
+    backgroundColor: kIconColor,
+  );
 
   @override
   void initState() {
@@ -34,6 +48,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void getSearchedData() async {
+    setState(() {});
     Future<dynamic> searchLocationWeather() async {
       String urirequest() {
         Uri request = Uri(
@@ -77,6 +92,7 @@ class _SearchPageState extends State<SearchPage> {
     setState(
       () {
         isDataLoaded = true;
+        isErrorOccurd = false;
       },
     );
     reload();
@@ -107,6 +123,7 @@ class _SearchPageState extends State<SearchPage> {
       return const LoadingWidget();
     } else {
       return Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: kOverlayColor,
         body: SafeArea(
           child: Column(
@@ -148,7 +165,7 @@ class _SearchPageState extends State<SearchPage> {
                             decoration: InputDecoration(
                               contentPadding: EdgeInsets.only(top: 10.5),
                               border: InputBorder.none,
-                              hintText: "Enter City Name",
+                              hintText: "Enter a city name",
                               hintStyle: GoogleFonts.monda(
                                 fontSize: 17,
                                 color: kHeadIconColor,
@@ -164,16 +181,21 @@ class _SearchPageState extends State<SearchPage> {
                                 icon: const Icon(Icons.search),
                                 color: kHeadIconColor,
                                 onPressed: () {
-                                  isReloadHappend = true;
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      context = context;
-                                      return const RefreshLoading();
-                                    },
-                                  );
-                                  city = searchController.text;
-                                  getSearchedData();
+                                  if (searchController.text == "") {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
+                                  } else {
+                                    isReloadHappend = true;
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        context = context;
+                                        return const RefreshLoading();
+                                      },
+                                    );
+                                    city = searchController.text;
+                                    getSearchedData();
+                                  }
                                 },
                               ),
                             ),
@@ -184,45 +206,49 @@ class _SearchPageState extends State<SearchPage> {
                   ],
                 ),
               ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.location_city,
-                          color: kMidLightColor,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          weatherModel?.location ?? "Enter Your City Name",
-                          style: GoogleFonts.monda(
-                            fontSize: 20,
-                            color: kMidLightColor,
+              isErrorOccurd
+                  ? ErrorMessage(title: searchTitle, message: searchMessage)
+                  : Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.location_city,
+                                color: kMidLightColor,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                weatherModel?.location ??
+                                    "Enter Your City Name",
+                                style: GoogleFonts.monda(
+                                  fontSize: 20,
+                                  color: kMidLightColor,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 25),
-                    Text(
-                      "${weatherModel?.temperatur!.round()}°",
-                      style: GoogleFonts.daysOne(
-                        fontSize: 80,
-                        color: kIconColor,
+                          const SizedBox(height: 25),
+                          Text(
+                            "${weatherModel?.temperatur.round()}°",
+                            style: GoogleFonts.daysOne(
+                              fontSize: 80,
+                              color: kIconColor,
+                            ),
+                          ),
+                          Text(
+                            weatherModel?.description!.toUpperCase() ??
+                                "no data",
+                            style: GoogleFonts.monda(
+                              fontSize: 20,
+                              color: kMidLightColor,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      weatherModel?.description!.toUpperCase() ?? "no data",
-                      style: GoogleFonts.monda(
-                        fontSize: 20,
-                        color: kMidLightColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Card(
@@ -235,12 +261,18 @@ class _SearchPageState extends State<SearchPage> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: DetailsWidget(
-                            text: "${weatherModel?.feelslike!.round()}°",
-                            detailText: "FEELS LIKE",
-                            color: kHeadIconColor,
-                            colorDetail: kDarkColor,
-                          ),
+                          child: isErrorOccurd
+                              ? DetailsWidget(
+                                  text: "0%",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor)
+                              : DetailsWidget(
+                                  text: "${weatherModel?.feelslike!.round()}°",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor,
+                                ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -250,12 +282,18 @@ class _SearchPageState extends State<SearchPage> {
                           ),
                         ),
                         Expanded(
-                          child: DetailsWidget(
-                            text: "${weatherModel?.humidity!}%",
-                            detailText: "HUMIDITY",
-                            color: kHeadIconColor,
-                            colorDetail: kDarkColor,
-                          ),
+                          child: isErrorOccurd
+                              ? DetailsWidget(
+                                  text: "0%",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor)
+                              : DetailsWidget(
+                                  text: "${weatherModel?.humidity!}%",
+                                  detailText: "HUMIDITY",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor,
+                                ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -265,12 +303,18 @@ class _SearchPageState extends State<SearchPage> {
                           ),
                         ),
                         Expanded(
-                          child: DetailsWidget(
-                            text: "${weatherModel?.wind!.round()}",
-                            detailText: "WIND",
-                            color: kHeadIconColor,
-                            colorDetail: kDarkColor,
-                          ),
+                          child: isErrorOccurd
+                              ? DetailsWidget(
+                                  text: "0%",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor)
+                              : DetailsWidget(
+                                  text: "${weatherModel?.wind!.round()}",
+                                  detailText: "WIND",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor,
+                                ),
                         ),
                       ],
                     ),

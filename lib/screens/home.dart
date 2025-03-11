@@ -121,6 +121,7 @@ class _HomeState extends State<Home> {
     kHeadIconColor = ThemeClass().lightIconColor;
     kLoadColor = ThemeClass().lightLoadColor;
     kLoadingColor = ThemeClass().lightLoadingColor;
+    kTextColor = ThemeClass().lightTextColor;
   }
 
   /// DarkMode
@@ -135,6 +136,7 @@ class _HomeState extends State<Home> {
     kHeadIconColor = ThemeClass().darkIconColor;
     kLoadColor = ThemeClass().darkLoadColor;
     kLoadingColor = ThemeClass().darkLoadingColor;
+    kTextColor = ThemeClass().darkTextColor;
   }
 
   void reload() {
@@ -205,7 +207,7 @@ class _HomeState extends State<Home> {
           child: SidebarX(
             controller: _controller,
             theme: SidebarXTheme(
-              // width: 100,
+              // height: 250,
               margin: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Color(0xff353535),
@@ -407,12 +409,18 @@ class _HomeState extends State<Home> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: DetailsWidget(
-                            text: "${weatherModel?.feelslike!.round()}°",
-                            detailText: "FEELS LIKE",
-                            color: kHeadIconColor,
-                            colorDetail: kDarkColor,
-                          ),
+                          child: isErrorOccurd
+                              ? DetailsWidget(
+                                  text: "0%",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor)
+                              : DetailsWidget(
+                                  text: "${weatherModel?.feelslike!.round()}°",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor,
+                                ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -422,12 +430,18 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                         Expanded(
-                          child: DetailsWidget(
-                            text: "${weatherModel?.humidity!}%",
-                            detailText: "HUMIDITY",
-                            color: kHeadIconColor,
-                            colorDetail: kDarkColor,
-                          ),
+                          child: isErrorOccurd
+                              ? DetailsWidget(
+                                  text: "0%",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor)
+                              : DetailsWidget(
+                                  text: "${weatherModel?.humidity!}%",
+                                  detailText: "HUMIDITY",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor,
+                                ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -437,12 +451,18 @@ class _HomeState extends State<Home> {
                           ),
                         ),
                         Expanded(
-                          child: DetailsWidget(
-                            text: "${weatherModel?.wind!.round()}",
-                            detailText: "WIND",
-                            color: kHeadIconColor,
-                            colorDetail: kDarkColor,
-                          ),
+                          child: isErrorOccurd
+                              ? DetailsWidget(
+                                  text: "0%",
+                                  detailText: "FEELS LIKE",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor)
+                              : DetailsWidget(
+                                  text: "${weatherModel?.wind!.round()}",
+                                  detailText: "WIND",
+                                  color: kHeadIconColor,
+                                  colorDetail: kDarkColor,
+                                ),
                         ),
                       ],
                     ),
@@ -456,159 +476,3 @@ class _HomeState extends State<Home> {
     }
   }
 }
-// class SecondRoute extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Second Route'),
-//         automaticallyImplyLeading: false,
-//       ),
-//       body: Center(
-//         child: ElevatedButton(
-//           onPressed: () => Navigator.pop(context),
-//           child: const Text('Go back!'),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// class Menu extends StatefulWidget {
-//   const Menu({super.key});
-
-//   @override
-//   State<Menu> createState() => _MenuState();
-// }
-
-// class _MenuState extends State<Menu> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     // userThemeCall();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return SizedBox(
-//       height: 60,
-//       child: GestureDetector(
-//         onTap: () => showPopover(
-//           bodyBuilder: (context) => const MenuItems(),
-//           context: context,
-//           width: 150,
-//           height: 100,
-//           backgroundColor: kOverlayColor,
-//         ),
-//         child: const Icon(Icons.menu),
-//       ),
-//     );
-//   }
-// }
-
-// class MenuItems extends StatefulWidget {
-//   const MenuItems({super.key});
-
-//   @override
-//   State<MenuItems> createState() => _MenuItemsState();
-// }
-
-// class _MenuItemsState extends State<MenuItems> {
-//   /// LightMode
-//   ///
-//   /// With this function user can switch into lightmode.
-//   void lightSwitch() {
-//     kOverlayColor = ThemeClass().lightBackgroundColor;
-//     kIconColor = ThemeClass().lightPrimaryTextColor;
-//     kMidLightColor = ThemeClass().lightPrimaryTextColor;
-//     kCardColor = ThemeClass().lightSecondaryTextColor;
-//     kDarkColor = ThemeClass().lightDetailTextColor;
-//     kHeadIconColor = ThemeClass().lightIconColor;
-//     kLoadColor = ThemeClass().lightLoadColor;
-//     kLoadingColor = ThemeClass().lightLoadingColor;
-//   }
-
-//   /// DarkMode
-//   ///
-//   /// With this function user can switch into darkmode.
-//   void darkSwitch() {
-//     kOverlayColor = ThemeClass().darkBackgroundColor;
-//     kIconColor = ThemeClass().darkPrimeryColor;
-//     kMidLightColor = ThemeClass().darkPrimaryTextColor;
-//     kCardColor = ThemeClass().darkSecondaryTextColor;
-//     kDarkColor = ThemeClass().darkDetailTextColor;
-//     kHeadIconColor = ThemeClass().darkIconColor;
-//     kLoadColor = ThemeClass().darkLoadColor;
-//     kLoadingColor = ThemeClass().darkLoadingColor;
-//   }
-
-//   void userTheme(bool themeMode) async {
-//     SharedPreferences preferences = await SharedPreferences.getInstance();
-//     preferences.setBool("ThemeMode", themeMode);
-//   }
-
-//   void userThemeCall() async {
-//     SharedPreferences preferences = await SharedPreferences.getInstance();
-//     themeBool = preferences.getBool("ThemeMode");
-//     if (themeBool == true) {
-//       iconMode = const Icon(
-//         Icons.nights_stay,
-//         color: Colors.white60,
-//       );
-//       iconModeStatus = true;
-//       darkSwitch();
-//     } else {
-//       iconMode = const Icon(
-//         Icons.light_mode,
-//         color: Color(0xFFFAFAFA),
-//       );
-//       iconModeStatus = false;
-//       lightSwitch();
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       children: [
-//         Padding(
-//           padding: const EdgeInsets.all(5.0),
-//           child: SizedBox(
-//             child: GestureDetector(
-//               child: const Icon(Icons.dark_mode),
-//               onTap: () {
-//                 setState(
-//                   () {
-//                     if (iconModeStatus == true) {
-//                       iconMode = const Icon(
-//                         Icons.light_mode,
-//                         color: Color(0xFFFAFAFA),
-//                       );
-//                       iconModeStatus = false;
-//                       userTheme(iconModeStatus!);
-//                       lightSwitch();
-//                       print("cock");
-//                     } else {
-//                       iconMode = const Icon(
-//                         Icons.nights_stay,
-//                         color: Colors.white60,
-//                       );
-//                       iconModeStatus = true;
-//                       userTheme(iconModeStatus!);
-//                       darkSwitch();
-//                       print("lock");
-//                     }
-//                   },
-//                 );
-//               },
-//             ),
-//           ),
-//         ),
-//         Container(
-//           height: 50,
-//           color: Colors.red,
-//         ),
-//       ],
-//     );
-//   }
-// }
