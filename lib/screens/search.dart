@@ -1,3 +1,5 @@
+import 'package:clima_weather/components/app_background.dart';
+import 'package:clima_weather/components/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,12 +91,26 @@ class _SearchPageState extends State<SearchPage> {
       lon: searchData["location"]["lat"],
     );
 
-    setState(
-      () {
-        isDataLoaded = true;
-        isErrorOccurd = false;
-      },
-    );
+    setState(() {
+      if (weatherModel?.temperatur.round() >= 30) {
+        kBolbOne = Color(0x60FF9800);
+        kBolbTwo = Color(0x60FF3D00);
+      } else if (weatherModel?.temperatur.round() >= 20) {
+        kBolbOne = Color(0x60FFDF4B);
+        kBolbTwo = Color(0x6036D100);
+      } else if (weatherModel?.temperatur.round() >= 10) {
+        kBolbOne = Color(0x6000BCD4);
+        kBolbTwo = Color(0x602196F3);
+      } else if (weatherModel?.temperatur.round() < 10) {
+        kBolbOne = Color(0x602196F3);
+        kBolbTwo = Color(0x603F51B5);
+      } else {
+        kBolbOne = Color(0x403B82F6);
+        kBolbTwo = Color(0x408B5CF6);
+      }
+      isDataLoaded = true;
+      isErrorOccurd = false;
+    });
     reload();
     searchCall();
   }
@@ -125,65 +141,76 @@ class _SearchPageState extends State<SearchPage> {
       return Scaffold(
         resizeToAvoidBottomInset: false,
         backgroundColor: kOverlayColor,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(6.5),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 57.0,
-                        child: GestureDetector(
+        body: AppBackground(
+          child: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(6.5),
+                  child: SizedBox(
+                    width: 360,
+                    child: Row(
+                      children: [
+                        GestureDetector(
                           onTap: () {
                             Navigator.pop(context);
                           },
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            color: kCardColor,
+                          child: GlassContainer(
+                            blurStrength: 15,
+                            borderRadius: 30,
                             child: Icon(
                               Icons.arrow_back,
                               color: kHeadIconColor,
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 4,
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        color: kCardColor,
-                        child: Center(
-                          child: TextField(
-                            controller: searchController,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(top: 10.5),
-                              border: InputBorder.none,
-                              hintText: "Enter a city name",
-                              hintStyle: GoogleFonts.monda(
-                                fontSize: 17,
-                                color: kHeadIconColor,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.clear),
-                                color: kHeadIconColor,
-                                onPressed: () {
-                                  searchController.clear();
-                                },
-                              ),
-                              prefixIcon: IconButton(
-                                icon: const Icon(Icons.search),
-                                color: kHeadIconColor,
-                                onPressed: () {
+                        Expanded(
+                          child: GlassContainer(
+                            blurStrength: 15,
+                            borderRadius: 30,
+                            child: SizedBox(
+                              height: 25,
+                              child: TextField(
+                                controller: searchController,
+                                onSubmitted: (value) {
                                   if (searchController.text == "") {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(snackBar);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        behavior: SnackBarBehavior.floating,
+                                        backgroundColor: Colors.transparent,
+                                        elevation: 0,
+                                        content: Container(
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: kGlassColor,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.15),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const SizedBox(width: 12),
+                                              Icon(
+                                                Icons.close,
+                                                color: kHeadIconColor,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  "The Field Is Empty!",
+                                                  style: TextStyle(
+                                                    color: kHeadIconColor,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
                                   } else {
                                     isReloadHappend = true;
                                     showDialog(
@@ -197,131 +224,135 @@ class _SearchPageState extends State<SearchPage> {
                                     getSearchedData();
                                   }
                                 },
+                                style: TextStyle(
+                                  color: kHeadIconColor,
+                                ),
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(Icons.search),
+                                  prefixIconColor: kHeadIconColor,
+                                  contentPadding:
+                                      EdgeInsets.fromLTRB(20, 0, 0, 10),
+                                  border: InputBorder.none,
+                                  hintText: "Enter a city name",
+                                  hintStyle: GoogleFonts.monda(
+                                    fontSize: 17,
+                                    color: kHeadIconColor,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              isErrorOccurd
-                  ? ErrorMessage(title: searchTitle, message: searchMessage)
-                  : Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.location_city,
-                                color: kMidLightColor,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                weatherModel?.location ??
-                                    "Enter Your City Name",
-                                style: GoogleFonts.monda(
-                                  fontSize: 20,
-                                  color: kMidLightColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 25),
-                          Text(
-                            "${weatherModel?.temperatur.round()}°",
-                            style: GoogleFonts.daysOne(
-                              fontSize: 80,
-                              color: kIconColor,
-                            ),
-                          ),
-                          Text(
-                            weatherModel?.description!.toUpperCase() ??
-                                "no data",
-                            style: GoogleFonts.monda(
-                              fontSize: 20,
-                              color: kMidLightColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  color: kCardColor,
-                  child: SizedBox(
-                    height: 90,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: isErrorOccurd
-                              ? DetailsWidget(
-                                  text: "0%",
-                                  detailText: "FEELS LIKE",
-                                  color: kHeadIconColor,
-                                  colorDetail: kDarkColor)
-                              : DetailsWidget(
-                                  text: "${weatherModel?.feelslike!.round()}°",
-                                  detailText: "FEELS LIKE",
-                                  color: kHeadIconColor,
-                                  colorDetail: kDarkColor,
-                                ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          child: VerticalDivider(
-                            thickness: 1,
-                            color: kDarkColor,
-                          ),
-                        ),
-                        Expanded(
-                          child: isErrorOccurd
-                              ? DetailsWidget(
-                                  text: "0%",
-                                  detailText: "FEELS LIKE",
-                                  color: kHeadIconColor,
-                                  colorDetail: kDarkColor)
-                              : DetailsWidget(
-                                  text: "${weatherModel?.humidity!}%",
-                                  detailText: "HUMIDITY",
-                                  color: kHeadIconColor,
-                                  colorDetail: kDarkColor,
-                                ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          child: VerticalDivider(
-                            thickness: 1,
-                            color: kDarkColor,
-                          ),
-                        ),
-                        Expanded(
-                          child: isErrorOccurd
-                              ? DetailsWidget(
-                                  text: "0%",
-                                  detailText: "FEELS LIKE",
-                                  color: kHeadIconColor,
-                                  colorDetail: kDarkColor)
-                              : DetailsWidget(
-                                  text: "${weatherModel?.wind!.round()}",
-                                  detailText: "WIND",
-                                  color: kHeadIconColor,
-                                  colorDetail: kDarkColor,
-                                ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+                isErrorOccurd
+                    ? ErrorMessage(title: searchTitle, message: searchMessage)
+                    : Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_city,
+                                  color: kMidLightColor,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  weatherModel?.location ??
+                                      "Enter Your City Name",
+                                  style: GoogleFonts.monda(
+                                    fontSize: 20,
+                                    color: kMidLightColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 25),
+                            Text(
+                              "${weatherModel?.temperatur.round()}°",
+                              style: GoogleFonts.daysOne(
+                                fontSize: 80,
+                                color: kIconColor,
+                              ),
+                            ),
+                            Text(
+                              weatherModel?.description!.toUpperCase() ??
+                                  "no data",
+                              style: GoogleFonts.monda(
+                                fontSize: 20,
+                                color: kMidLightColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: GlassContainer(
+                    blurStrength: 15,
+                    borderRadius: 30,
+                    child: SizedBox(
+                      height: 60,
+                      width: 350,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: isErrorOccurd
+                                ? DetailsWidget(
+                                    text: "0%",
+                                    detailText: "FEELS LIKE",
+                                    color: kHeadIconColor,
+                                    colorDetail: kTextColor,
+                                  )
+                                : DetailsWidget(
+                                    text:
+                                        "${weatherModel?.feelslike!.round()}°",
+                                    detailText: "FEELS LIKE",
+                                    color: kHeadIconColor,
+                                    colorDetail: kTextColor,
+                                  ),
+                          ),
+                          Expanded(
+                            child: isErrorOccurd
+                                ? DetailsWidget(
+                                    text: "0%",
+                                    detailText: "HUMIDITY",
+                                    color: kHeadIconColor,
+                                    colorDetail: kTextColor,
+                                  )
+                                : DetailsWidget(
+                                    text: "${weatherModel?.humidity!}%",
+                                    detailText: "HUMIDITY",
+                                    color: kHeadIconColor,
+                                    colorDetail: kTextColor,
+                                  ),
+                          ),
+                          Expanded(
+                            child: isErrorOccurd
+                                ? DetailsWidget(
+                                    text: "0",
+                                    detailText: "WIND",
+                                    color: kHeadIconColor,
+                                    colorDetail: kTextColor,
+                                  )
+                                : DetailsWidget(
+                                    text: "${weatherModel?.wind!.round()}",
+                                    detailText: "WIND",
+                                    color: kHeadIconColor,
+                                    colorDetail: kTextColor,
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );

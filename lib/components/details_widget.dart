@@ -6,13 +6,13 @@ class DetailsWidget extends StatelessWidget {
   final String? detailText;
   final Color? color;
   final Color? colorDetail;
-  const DetailsWidget(
-      {super.key,
-      required this.detailText,
-      required this.text,
-      required this.color,
-      required this.colorDetail,
-      });
+  const DetailsWidget({
+    super.key,
+    required this.detailText,
+    required this.text,
+    required this.color,
+    required this.colorDetail,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class DetailsWidget extends StatelessWidget {
             Visibility(
               visible: detailText == "WIND" ? true : false,
               child: Text(
-                " km/hr",
+                " km/h",
                 style: GoogleFonts.monda(
                   fontSize: 12,
                   color: color,
@@ -47,7 +47,7 @@ class DetailsWidget extends StatelessWidget {
         Text(
           detailText!,
           style: GoogleFonts.monda(
-            fontSize: 16,
+            fontSize: 14,
             color: colorDetail,
           ),
         )

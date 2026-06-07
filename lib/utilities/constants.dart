@@ -15,6 +15,13 @@ dynamic kHeadIconColor = Colors.white60;
 dynamic kLoadColor = Colors.white;
 dynamic kLoadingColor = Colors.black;
 dynamic kTextColor = Colors.white;
+dynamic kGlassColor = Colors.white;
+dynamic kGlassBorder = Colors.white;
+dynamic kGradientOne = Color(0xFFFDFDFD);
+dynamic kGradientTwo = Color(0xFFF5F5F7);
+dynamic kGradientThree = Color(0xFFEDEEF1);
+dynamic kBolbOne = Color(0x403B82F6);
+dynamic kBolbTwo = Color(0x408B5CF6);
 
 Icon iconMode = Icon(
   Icons.nights_stay,

@@ -29,8 +29,8 @@ class MyApp extends StatelessWidget {
         );
       },
       debugShowCheckedModeBanner: false,
-      title: 'Clima Weather App',
-      home: const Home(),
+      title: "Clima Weather App",
+      home: Home(),
     );
   }
 }
