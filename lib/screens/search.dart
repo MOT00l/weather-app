@@ -63,8 +63,6 @@ class _SearchPageState extends State<SearchPage> {
             "api": "yes"
           },
         );
-
-        print(request);
         return request.toString();
       }
 
@@ -92,27 +90,31 @@ class _SearchPageState extends State<SearchPage> {
     );
 
     setState(() {
-      if (weatherModel?.temperatur.round() >= 30) {
-        kBolbOne = Color(0x60FF9800);
-        kBolbTwo = Color(0x60FF3D00);
-      } else if (weatherModel?.temperatur.round() >= 20) {
-        kBolbOne = Color(0x60FFDF4B);
-        kBolbTwo = Color(0x6036D100);
-      } else if (weatherModel?.temperatur.round() >= 10) {
-        kBolbOne = Color(0x6000BCD4);
-        kBolbTwo = Color(0x602196F3);
-      } else if (weatherModel?.temperatur.round() < 10) {
-        kBolbOne = Color(0x602196F3);
-        kBolbTwo = Color(0x603F51B5);
-      } else {
-        kBolbOne = Color(0x403B82F6);
-        kBolbTwo = Color(0x408B5CF6);
-      }
-      isDataLoaded = true;
-      isErrorOccurd = false;
+      bolbColor();
     });
     reload();
     searchCall();
+  }
+
+  void bolbColor() {
+    if (weatherModel?.temperatur.round() >= 30) {
+      kBolbOne = Color(0x60FF9800);
+      kBolbTwo = Color(0x60FF3D00);
+    } else if (weatherModel?.temperatur.round() >= 20) {
+      kBolbOne = Color(0x60FFDF4B);
+      kBolbTwo = Color(0x6036D100);
+    } else if (weatherModel?.temperatur.round() >= 10) {
+      kBolbOne = Color(0x6000BCD4);
+      kBolbTwo = Color(0x602196F3);
+    } else if (weatherModel?.temperatur.round() < 10) {
+      kBolbOne = Color(0x602196F3);
+      kBolbTwo = Color(0x603F51B5);
+    } else {
+      kBolbOne = Color(0x403B82F6);
+      kBolbTwo = Color(0x408B5CF6);
+    }
+    isDataLoaded = true;
+    isErrorOccurd = false;
   }
 
   void reload() {

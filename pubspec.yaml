@@ -37,7 +37,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.7
   shared_preferences: ^2.2.2
-  sidebarx: ^0.17.1
+#  home_widget: ^0.8.0
 
 
 dev_dependencies:

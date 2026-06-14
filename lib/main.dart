@@ -3,6 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+  );
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+
   runApp(const MyApp());
 }
 
@@ -29,7 +42,6 @@ class MyApp extends StatelessWidget {
         );
       },
       debugShowCheckedModeBanner: false,
-      title: "Clima Weather App",
       home: Home(),
     );
   }
