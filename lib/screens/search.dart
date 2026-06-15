@@ -2,7 +2,6 @@ import 'package:clima_weather/components/app_background.dart';
 import 'package:clima_weather/components/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
 import '../components/error_message.dart';
@@ -27,7 +26,15 @@ class _SearchPageState extends State<SearchPage> {
   late String city;
   late var searchData;
   late var iconSearchData;
-  WeatherModel? weatherModel;
+  WeatherModel weatherModel = WeatherModel(
+    temperatur: 0,
+    feelslike: 0,
+    humidity: 0,
+    wind: 0,
+    location: "Loading...",
+    description: "Loading...",
+    icon: "assets/weather-icons/wi-time-1.svg",
+  );
   int code = 0;
   bool isErrorOccurd = true;
   String? title, message;
@@ -46,11 +53,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    searchCall();
   }
 
   void getSearchedData() async {
-    setState(() {});
     Future<dynamic> searchLocationWeather() async {
       String urirequest() {
         Uri request = Uri(
@@ -86,27 +91,25 @@ class _SearchPageState extends State<SearchPage> {
       humidity: searchData["current"]["humidity"],
       wind: searchData["current"]["wind_kph"],
       lat: searchData["location"]["lat"],
-      lon: searchData["location"]["lat"],
+      lon: searchData["location"]["lon"],
     );
-
     setState(() {
       bolbColor();
     });
     reload();
-    searchCall();
   }
 
   void bolbColor() {
-    if (weatherModel?.temperatur.round() >= 30) {
+    if (weatherModel.temperatur.round() >= 30) {
       kBolbOne = Color(0x60FF9800);
       kBolbTwo = Color(0x60FF3D00);
-    } else if (weatherModel?.temperatur.round() >= 20) {
+    } else if (weatherModel.temperatur.round() >= 20) {
       kBolbOne = Color(0x60FFDF4B);
       kBolbTwo = Color(0x6036D100);
-    } else if (weatherModel?.temperatur.round() >= 10) {
+    } else if (weatherModel.temperatur.round() >= 10) {
       kBolbOne = Color(0x6000BCD4);
       kBolbTwo = Color(0x602196F3);
-    } else if (weatherModel?.temperatur.round() < 10) {
+    } else if (weatherModel.temperatur.round() < 10) {
       kBolbOne = Color(0x602196F3);
       kBolbTwo = Color(0x603F51B5);
     } else {
@@ -122,17 +125,6 @@ class _SearchPageState extends State<SearchPage> {
       Navigator.pop(context);
       isReloadHappend = false;
     }
-  }
-
-  void searchSave(String data) async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    preferences.setString("wLocation", data);
-  }
-
-  void searchCall() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    weatherModel?.location = preferences.getString("wLocation");
-    print(weatherModel?.location);
   }
 
   @override
@@ -264,26 +256,25 @@ class _SearchPageState extends State<SearchPage> {
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
-                                  weatherModel?.location ??
-                                      "Enter Your City Name",
+                                  weatherModel.location!,
                                   style: GoogleFonts.monda(
                                     fontSize: 20,
                                     color: kMidLightColor,
                                   ),
-                                ),
+                                )
                               ],
                             ),
-                            const SizedBox(height: 25),
+                            const SizedBox(height: 15),
                             Text(
-                              "${weatherModel?.temperatur.round()}°",
+                              "${weatherModel.temperatur!.round()}°",
                               style: GoogleFonts.daysOne(
                                 fontSize: 80,
                                 color: kIconColor,
                               ),
                             ),
+                            const SizedBox(height: 15),
                             Text(
-                              weatherModel?.description!.toUpperCase() ??
-                                  "no data",
+                              weatherModel.description!.toUpperCase(),
                               style: GoogleFonts.monda(
                                 fontSize: 20,
                                 color: kMidLightColor,
@@ -311,8 +302,7 @@ class _SearchPageState extends State<SearchPage> {
                                     colorDetail: kTextColor,
                                   )
                                 : DetailsWidget(
-                                    text:
-                                        "${weatherModel?.feelslike!.round()}°",
+                                    text: "${weatherModel.feelslike!.round()}°",
                                     detailText: "FEELS LIKE",
                                     color: kHeadIconColor,
                                     colorDetail: kTextColor,
@@ -327,7 +317,7 @@ class _SearchPageState extends State<SearchPage> {
                                     colorDetail: kTextColor,
                                   )
                                 : DetailsWidget(
-                                    text: "${weatherModel?.humidity!}%",
+                                    text: "${weatherModel.humidity!}%",
                                     detailText: "HUMIDITY",
                                     color: kHeadIconColor,
                                     colorDetail: kTextColor,
@@ -342,7 +332,7 @@ class _SearchPageState extends State<SearchPage> {
                                     colorDetail: kTextColor,
                                   )
                                 : DetailsWidget(
-                                    text: "${weatherModel?.wind!.round()}",
+                                    text: "${weatherModel.wind!.round()}",
                                     detailText: "WIND",
                                     color: kHeadIconColor,
                                     colorDetail: kTextColor,

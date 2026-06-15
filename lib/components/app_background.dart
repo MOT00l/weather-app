@@ -42,7 +42,7 @@ class AppBackground extends StatelessWidget {
           clockwise: false,
           size: 400,
           startOffset: Offset(30, 780),
-          endOffset: Offset(-40, 560),
+          endOffset: Offset(-30, -780),
         ),
         child,
       ],

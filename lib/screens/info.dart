@@ -49,7 +49,7 @@ class _InfoState extends State<Info> {
                               " and detailed climate insights. \nEnjoy a seamless and user"
                               "-friendly experience designed to keep you informed and "
                               "prepared."
-                              "\n\nVersion: 3.0.0",
+                              "\n\nVersion: 3.1.0",
                               style: GoogleFonts.monda(
                                 fontSize: 17,
                                 color: Colors.white,

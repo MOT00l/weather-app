@@ -12,7 +12,7 @@ class Weather {
   ///
   /// Gets latest weather cordinations by Api class.
   ///
-  /// __Note__: Keep in touch about [open weathr api](https://google.com)
+  /// __Note__: Keep in touch about [open weather api]
   ///
   /// - Supports from Async function.
   /// - Can use a lot of time.
