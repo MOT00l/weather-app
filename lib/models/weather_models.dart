@@ -1,12 +1,15 @@
 class WeatherModel {
   String? location, description, icon;
-  dynamic temperatur, feelslike, humidity, wind;
+  dynamic temperatur, feelslike, humidity, wind, tempmin, tempmax, pressure;
   double? lat, lon;
 
   WeatherModel({
     this.location,
     this.description,
     this.icon,
+    this.tempmin,
+    this.tempmax,
+    this.pressure,
     this.temperatur,
     this.feelslike,
     this.humidity,

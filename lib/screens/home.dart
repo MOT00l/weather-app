@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:clima_weather/components/app_background.dart';
-import 'package:clima_weather/components/error_message.dart';
 import 'package:clima_weather/components/glass_container.dart';
 import 'package:clima_weather/models/weather_models.dart';
 import 'package:clima_weather/screens/info.dart';
@@ -17,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
 import '../components/refresh_loading.dart';
+import '../models/drang_handle.dart';
 import '../models/themes.dart';
 import '../services/weather_cache.dart';
 
@@ -27,7 +27,7 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   bool isDataLoaded = false;
   bool isErrorOccurd = false;
   double? latitude;
@@ -42,6 +42,9 @@ class _HomeState extends State<Home> {
     location: "Loading...",
     description: "Loading...",
     icon: "assets/weather-icons/wi-time-1.svg",
+    tempmin: 0,
+    tempmax: 0,
+    pressure: 0,
   );
   int code = 0;
   Weather weather = Weather();
@@ -55,20 +58,69 @@ class _HomeState extends State<Home> {
   bool? themeBool;
   bool? iconModeStatus;
   bool menuOpen = false;
-  bool isDetailsExpanded = false;
-  bool showDetailsCard = false;
+
+  // ======================================
+  // DETAILS CARD ANIMATION
+  // ======================================
+  late AnimationController detailsController;
+
+  // ======================================
+  // LAST UPDATE
+  // ======================================
+  String lastUpdated = "Updating...";
+  String formatLastUpdated(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+
+    return "Last updated: $hour:$minute";
+  }
 
   @override
   void initState() {
     super.initState();
+
+    detailsController = AnimationController(
+      vsync: this,
+      duration: const Duration(
+        milliseconds: 500,
+      ),
+    );
+
     initializeWeather();
     userThemeCall();
+    loadLastUpdated();
   }
 
+// ======================================
+// WEATHER DATA
+// ======================================
   Future<void> initializeWeather() async {
     await loadCachedWeather();
 
     getPremission();
+  }
+
+// ======================================
+// LAST UPDATE
+// ======================================
+  Future<void> loadLastUpdated() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedTime = prefs.getString("lastUpdated");
+
+    if (savedTime == null) return;
+
+    final dateTime = DateTime.parse(savedTime);
+
+    setState(() {
+      lastUpdated = formatLastUpdated(dateTime);
+    });
+  }
+
+  @override
+  void dispose() {
+    detailsController.dispose();
+    super.dispose();
   }
 
   ///# GetPremission
@@ -98,16 +150,6 @@ class _HomeState extends State<Home> {
   /// 1. it will check if app have accses to user current location.
   /// 2. it will get all the data that app need from [getLocationWeather] function.
   void getLocation() async {
-    // if (!await geolocatorPlatform.isLocationServiceEnabled()) {
-    //   setState(() {
-    //     isErrorOccurd = true;
-    //     isDataLoaded = true;
-    //     title = "Location is turned off";
-    //     message =
-    //         "Please enable the location service to see weather condition for your location";
-    //     return;
-    //   });
-    // }
     await geolocatorPlatform.isLocationServiceEnabled();
 
     try {
@@ -127,6 +169,9 @@ class _HomeState extends State<Home> {
           "assets/weather-icons/${getIconsPreFix(code)}${kWeatherIcons[code.toString()]!["icon"]}.svg",
       location: weatherData["name"] + ", " + weatherData["sys"]["country"],
       description: weatherData["weather"][0]["description"],
+      tempmin: weatherData["main"]["temp_min"],
+      tempmax: weatherData["main"]["temp_max"],
+      pressure: weatherData["main"]["pressure"],
     );
 
     await WeatherCache.saveWeather(
@@ -139,13 +184,23 @@ class _HomeState extends State<Home> {
       icon: weatherModel.icon!,
     );
 
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(
+      "lastUpdated",
+      DateTime.now().toIso8601String(),
+    );
+
     // await WidgetService.updateWidget(
     //   temp: weatherModel!.temperatur.round().toString(),
     //   description: weatherModel!.description!,
     //   location: weatherModel!.location!,
     // );
 
+    final now = DateTime.now();
+
     setState(() {
+      lastUpdated = formatLastUpdated(now);
       bolbColor();
     });
     reload();
@@ -171,6 +226,10 @@ class _HomeState extends State<Home> {
     isDataLoaded = true;
     isErrorOccurd = false;
   }
+
+  // ======================================
+  // THEME MANAGEMENT
+  // ======================================
 
   /// LightMode
   ///
@@ -291,29 +350,13 @@ class _HomeState extends State<Home> {
     return true;
   }
 
-  void closeDetailsCard() {
-    setState(() {
-      isDetailsExpanded = false;
-    });
-
-    Future.delayed(
-      const Duration(milliseconds: 500),
-      () {
-        if (!mounted) return;
-
-        setState(() {
-          showDetailsCard = false;
-        });
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kOverlayColor,
       body: Stack(
         children: [
+          // Main Weather Content
           Positioned.fill(
             child: AppBackground(
               child: SafeArea(
@@ -321,14 +364,16 @@ class _HomeState extends State<Home> {
                   children: [
                     SizedBox(
                       width: 360,
+
+                      //Top Row
                       child: Row(
                         children: [
+                          // Menu Button
                           GestureDetector(
                             onTap: () {
                               setState(() {
                                 menuOpen = !menuOpen;
                               });
-                              // _key.currentState?.openDrawer();
                             },
                             child: GlassContainer(
                               blurStrength: 15,
@@ -345,25 +390,25 @@ class _HomeState extends State<Home> {
                           Expanded(
                             child: Card(),
                           ),
-                          Center(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SearchPage(),
-                                  ),
-                                );
-                              },
-                              child: GlassContainer(
-                                blurStrength: 15,
-                                borderRadius: 30,
-                                child: Tooltip(
-                                  message: "Will Navigate To Search Page",
-                                  child: Icon(
-                                    Icons.search,
-                                    color: kHeadIconColor,
-                                  ),
+
+                          //Search Page Button
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SearchPage(),
+                                ),
+                              );
+                            },
+                            child: GlassContainer(
+                              blurStrength: 15,
+                              borderRadius: 30,
+                              child: Tooltip(
+                                message: "Will Navigate To Search Page",
+                                child: Icon(
+                                  Icons.search,
+                                  color: kHeadIconColor,
                                 ),
                               ),
                             ),
@@ -371,141 +416,77 @@ class _HomeState extends State<Home> {
                         ],
                       ),
                     ),
-                    isErrorOccurd
-                        ? ErrorMessage(title: title!, message: message!)
-                        : Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.location_city,
-                                      color: kMidLightColor,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      weatherModel.location!,
-                                      style: GoogleFonts.monda(
-                                        fontSize: 20,
-                                        color: kMidLightColor,
-                                      ),
-                                    )
-                                  ],
+
+                    //Middle Widgets
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.location_city,
+                                color: kMidLightColor,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                weatherModel.location!,
+                                style: GoogleFonts.monda(
+                                  fontSize: 20,
+                                  color: kMidLightColor,
                                 ),
-                                const SizedBox(height: 25),
-                                SvgPicture.asset(
-                                  weatherModel.icon!,
-                                  height: 280,
-                                  colorFilter: ColorFilter.mode(
-                                    kIconColor,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                                Text(
-                                  "${weatherModel.temperatur!.round()}°",
-                                  style: GoogleFonts.daysOne(
-                                    fontSize: 80,
-                                    color: kIconColor,
-                                  ),
-                                ),
-                                Text(
-                                  weatherModel.description!.toUpperCase(),
-                                  style: GoogleFonts.monda(
-                                    fontSize: 20,
-                                    color: kMidLightColor,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              )
+                            ],
                           ),
-                    if (!showDetailsCard)
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              showDetailsCard = true;
-                            });
-
-                            Future.delayed(
-                              const Duration(milliseconds: 10),
-                              () {
-                                if (!mounted) return;
-
-                                setState(() {
-                                  isDetailsExpanded = true;
-                                });
-                              },
-                            );
-                          },
-                          child: GlassContainer(
-                            blurStrength: 15,
-                            borderRadius: 30,
-                            child: SizedBox(
-                              height: 60,
-                              width: 350,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: isErrorOccurd
-                                        ? DetailsWidget(
-                                            text: "0%",
-                                            detailText: "FEELS LIKE",
-                                            color: kHeadIconColor,
-                                            colorDetail: kTextColor,
-                                          )
-                                        : DetailsWidget(
-                                            text:
-                                                "${weatherModel.feelslike!.round()}°",
-                                            detailText: "FEELS LIKE",
-                                            color: kHeadIconColor,
-                                            colorDetail: kTextColor,
-                                          ),
-                                  ),
-                                  Expanded(
-                                    child: isErrorOccurd
-                                        ? DetailsWidget(
-                                            text: "0%",
-                                            detailText: "HUMIDITY",
-                                            color: kHeadIconColor,
-                                            colorDetail: kTextColor,
-                                          )
-                                        : DetailsWidget(
-                                            text: "${weatherModel.humidity!}%",
-                                            detailText: "HUMIDITY",
-                                            color: kHeadIconColor,
-                                            colorDetail: kTextColor,
-                                          ),
-                                  ),
-                                  Expanded(
-                                    child: isErrorOccurd
-                                        ? DetailsWidget(
-                                            text: "0",
-                                            detailText: "WIND",
-                                            color: kHeadIconColor,
-                                            colorDetail: kTextColor,
-                                          )
-                                        : DetailsWidget(
-                                            text:
-                                                "${weatherModel.wind!.round()}",
-                                            detailText: "WIND",
-                                            color: kHeadIconColor,
-                                            colorDetail: kTextColor,
-                                          ),
-                                  ),
-                                ],
+                          const SizedBox(height: 25),
+                          AnimatedSwitcher(
+                            duration: Duration(milliseconds: 800),
+                            child: SvgPicture.asset(
+                              weatherModel.icon!,
+                              height: 280,
+                              colorFilter: ColorFilter.mode(
+                                kIconColor,
+                                BlendMode.srcIn,
                               ),
                             ),
                           ),
-                        ),
+                          Text(
+                            "${weatherModel.temperatur!.round()}°",
+                            style: GoogleFonts.daysOne(
+                              fontSize: 80,
+                              color: kIconColor,
+                            ),
+                          ),
+                          Text(
+                            weatherModel.description!.toUpperCase(),
+                            style: GoogleFonts.monda(
+                              fontSize: 20,
+                              color: kMidLightColor,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            lastUpdated,
+                            style: GoogleFonts.monda(
+                              fontSize: 16,
+                              color: kTextColor.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    SizedBox(
+                      height: 100,
+                      width: 450,
+                    ),
                   ],
                 ),
               ),
             ),
           ),
+
+          // Menu Backdrop
           if (menuOpen)
             GestureDetector(
               onTap: () {
@@ -521,6 +502,8 @@ class _HomeState extends State<Home> {
                 ),
               ),
             ),
+
+          // Slide Down Menu
           AnimatedPositioned(
             duration: const Duration(milliseconds: 350),
             curve: Curves.easeOutCubic,
@@ -562,120 +545,25 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          if (showDetailsCard)
-            GestureDetector(
-              onTap: () {
-                closeDetailsCard();
-              },
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 500),
-                opacity: isDetailsExpanded ? 1 : 0,
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: 10,
-                    sigmaY: 10,
-                  ),
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.25),
-                  ),
-                ),
+
+          // Weather Bottom Sheet
+          Padding(
+            padding: EdgeInsets.only(bottom: 25),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: WeatherBottomSheet(
+                controller: detailsController,
+                weatherModel: weatherModel,
+                isErrorOccurd: isErrorOccurd,
               ),
             ),
-          if (showDetailsCard)
-            Center(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(
-                  begin: isDetailsExpanded ? 0 : 1,
-                  end: isDetailsExpanded ? 1 : 0,
-                ),
-                duration: const Duration(
-                  milliseconds: 500,
-                ),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Transform.translate(
-                    offset: Offset(
-                      0,
-                      lerpDouble(
-                        250,
-                        0,
-                        value,
-                      )!,
-                    ),
-                    child: GlassContainer(
-                      blurStrength: 15,
-                      borderRadius: 30 + (10 * value),
-                      child: SizedBox(
-                        width: lerpDouble(
-                          350,
-                          320,
-                          value,
-                        ),
-                        height: lerpDouble(
-                          60,
-                          420,
-                          value,
-                        ),
-                        child: Opacity(
-                          opacity: value,
-                          child: Column(
-                            children: [
-                              SizedBox(height: 20),
-                              Text(
-                                "Weather Details",
-                                style: GoogleFonts.monda(
-                                  color: kHeadIconColor,
-                                  fontSize: 22,
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20),
-                                  child: Column(
-                                    children: [
-                                      detailRow(
-                                        "Temperature",
-                                        "${weatherModel.temperatur!.round()}°",
-                                      ),
-                                      detailRow(
-                                        "Feels Like",
-                                        "${weatherModel.feelslike!.round()}°",
-                                      ),
-                                      detailRow(
-                                        "Humidity",
-                                        "${weatherModel.humidity}%",
-                                      ),
-                                      detailRow(
-                                        "Wind Speed",
-                                        "${weatherModel.wind!.round()} km/h",
-                                      ),
-                                      detailRow(
-                                        "Location",
-                                        weatherModel.location!,
-                                      ),
-                                      detailRow(
-                                        "Condition",
-                                        weatherModel.description!,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+          ),
         ],
       ),
     );
   }
 
+// Menu Items
   Widget menuItem(
     IconData icon,
     String title,
@@ -723,6 +611,7 @@ class _HomeState extends State<Home> {
   }
 }
 
+// Expanded Detail Row
 Widget detailRow(
   String title,
   String value,
@@ -752,4 +641,233 @@ Widget detailRow(
       ],
     ),
   );
+}
+
+class WeatherBottomSheet extends StatelessWidget {
+  final AnimationController controller;
+  final WeatherModel weatherModel;
+  final bool isErrorOccurd;
+  const WeatherBottomSheet({
+    super.key,
+    required this.controller,
+    required this.weatherModel,
+    required this.isErrorOccurd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        final t = controller.value;
+
+        return GestureDetector(
+          onTap: () {
+            if (controller.value == 0) {
+              controller.forward();
+            } else {
+              controller.reverse();
+            }
+          },
+          onVerticalDragUpdate: (details) {
+            controller.value =
+                (controller.value - details.delta.dy / 400).clamp(0.0, 1.0);
+          },
+          onVerticalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+
+            if (velocity < -500) {
+              controller.forward();
+            } else if (velocity > 500) {
+              controller.reverse();
+            } else {
+              if (controller.value > 0.5) {
+                controller.forward();
+              } else {
+                controller.reverse();
+              }
+            }
+          },
+          child: GlassContainer(
+            borderRadius: lerpDouble(
+              30,
+              30,
+              t,
+            )!,
+            child: SizedBox(
+              width: lerpDouble(
+                350,
+                MediaQuery.of(context).size.width - 24,
+                t,
+              ),
+              height: lerpDouble(
+                80,
+                250,
+                t,
+              ),
+              child: Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(
+                      0,
+                      -20 * t,
+                    ),
+                    child: Opacity(
+                      opacity: 1 - t,
+                      child: CompactContent(
+                        weatherModel: weatherModel,
+                        isErrorOccurd: isErrorOccurd,
+                      ),
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: Offset(
+                      0,
+                      20 * (1 - t),
+                    ),
+                    child: Opacity(
+                      opacity: t,
+                      child: ExpandedContent(
+                        weatherModel: weatherModel,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class CompactContent extends StatelessWidget {
+  final WeatherModel weatherModel;
+  final bool isErrorOccurd;
+
+  const CompactContent({
+    super.key,
+    required this.weatherModel,
+    required this.isErrorOccurd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const DragHandle(),
+        SizedBox(
+          height: 15,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: DetailsWidget(
+                text: "${weatherModel.feelslike?.round() ?? 0}°",
+                detailText: "FEELS LIKE",
+                color: kHeadIconColor,
+                colorDetail: kTextColor,
+              ),
+            ),
+            Expanded(
+              child: DetailsWidget(
+                text: "${weatherModel.humidity ?? 0}%",
+                detailText: "HUMIDITY",
+                color: kHeadIconColor,
+                colorDetail: kTextColor,
+              ),
+            ),
+            Expanded(
+              child: DetailsWidget(
+                text: "${weatherModel.wind?.round() ?? 0}",
+                detailText: "WIND",
+                color: kHeadIconColor,
+                colorDetail: kTextColor,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class ExpandedContent extends StatelessWidget {
+  final WeatherModel weatherModel;
+
+  const ExpandedContent({
+    super.key,
+    required this.weatherModel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          const DragHandle(),
+          const SizedBox(height: 40),
+          Row(
+            children: [
+              Expanded(
+                child: DetailsWidget(
+                  text: "${weatherModel.feelslike?.round() ?? 0}°",
+                  detailText: "FEELS LIKE",
+                  color: kHeadIconColor,
+                  colorDetail: kTextColor,
+                ),
+              ),
+              Expanded(
+                child: DetailsWidget(
+                  text: "${weatherModel.humidity ?? 0}%",
+                  detailText: "HUMIDITY",
+                  color: kHeadIconColor,
+                  colorDetail: kTextColor,
+                ),
+              ),
+              Expanded(
+                child: DetailsWidget(
+                  text: "${weatherModel.wind?.round() ?? 0}",
+                  detailText: "WIND",
+                  color: kHeadIconColor,
+                  colorDetail: kTextColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 40),
+          Row(
+            children: [
+              Expanded(
+                child: DetailsWidget(
+                  text: "${weatherModel.tempmax?.round() ?? 0}°",
+                  detailText: "MAX \n TEMPERATURE",
+                  color: kHeadIconColor,
+                  colorDetail: kTextColor,
+                ),
+              ),
+              Expanded(
+                child: DetailsWidget(
+                  text: "${weatherModel.tempmin?.round() ?? 0}°",
+                  detailText: "MIN \n TEMPERATURE",
+                  color: kHeadIconColor,
+                  colorDetail: kTextColor,
+                ),
+              ),
+              Expanded(
+                child: DetailsWidget(
+                  text: "${weatherModel.pressure ?? 0}",
+                  detailText: "\n PRESSURE",
+                  color: kHeadIconColor,
+                  colorDetail: kTextColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

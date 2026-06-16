@@ -41,15 +41,26 @@ class DetailsWidget extends StatelessWidget {
                   color: color,
                 ),
               ),
-            )
+            ),
+            Visibility(
+              visible: detailText == "\n PRESSURE" ? true : false,
+              child: Text(
+                " mbar",
+                style: GoogleFonts.monda(
+                  fontSize: 12,
+                  color: color,
+                ),
+              ),
+            ),
           ],
         ),
         Text(
           detailText!,
           style: GoogleFonts.monda(
-            fontSize: 14,
+            fontSize: 13,
             color: colorDetail,
           ),
+          textAlign: TextAlign.center,
         )
       ],
     );
