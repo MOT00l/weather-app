@@ -182,6 +182,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       location: weatherModel.location!,
       description: weatherModel.description!,
       icon: weatherModel.icon!,
+      pressure: weatherModel.pressure!,
+      tempmax: weatherModel.tempmax!,
+      tempmin: weatherModel.tempmin!,
     );
 
     final prefs = await SharedPreferences.getInstance();

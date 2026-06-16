@@ -9,6 +9,9 @@ class WeatherCache {
     required String location,
     required String description,
     required String icon,
+    required double tempmin,
+    required double tempmax,
+    required double pressure,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -20,6 +23,10 @@ class WeatherCache {
     await prefs.setString("location", location);
     await prefs.setString("description", description);
     await prefs.setString("icon", icon);
+
+    await prefs.setDouble("tempmin", tempmin);
+    await prefs.setDouble("tempmax", tempmax);
+    await prefs.setDouble("pressure", pressure);
 
     await prefs.setInt(
       "lastUpdate",
@@ -43,6 +50,9 @@ class WeatherCache {
       "description": prefs.getString("description"),
       "icon": prefs.getString("icon"),
       "lastUpdate": prefs.getInt("lastUpdate"),
+      "tempmin": prefs.getDouble("tempmin"),
+      "tempmax": prefs.getDouble("tempmax"),
+      "pressure": prefs.getDouble("pressure"),
     };
   }
 }

@@ -4,6 +4,7 @@ import 'package:clima_weather/components/app_background.dart';
 import 'package:clima_weather/components/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
 import '../components/error_message.dart';
@@ -12,6 +13,7 @@ import '../components/refresh_loading.dart';
 import '../models/drang_handle.dart';
 import '../models/search_models.dart';
 import '../services/networking.dart';
+import '../services/serach_cache.dart';
 import '../utilities/constants.dart';
 
 class SearchPage extends StatefulWidget {
@@ -54,7 +56,21 @@ class _SearchPageState extends State<SearchPage>
     backgroundColor: kIconColor,
   );
 
+  // ======================================
+  // DETAILS CARD ANIMATION
+  // ======================================
   late AnimationController detailsController;
+
+  // ======================================
+  // LAST UPDATE
+  // ======================================
+  String searchLastUpdated = "Updating...";
+  String formatsearchLastUpdated(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+
+    return "Last updated: $hour:$minute";
+  }
 
   @override
   void initState() {
@@ -66,6 +82,33 @@ class _SearchPageState extends State<SearchPage>
         milliseconds: 500,
       ),
     );
+
+    initializeSearch();
+    loadSearchLastUpdated();
+  }
+
+  // ======================================
+  // SEARCH DATA
+  // ======================================
+  Future<void> initializeSearch() async {
+    await loadCachedSearch();
+  }
+
+  // ======================================
+  // LAST UPDATE
+  // ======================================
+  Future<void> loadSearchLastUpdated() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedTime = prefs.getString("search_lastUpdated");
+
+    if (savedTime == null) return;
+
+    final dateTime = DateTime.parse(savedTime);
+
+    setState(() {
+      searchLastUpdated = formatsearchLastUpdated(dateTime);
+    });
   }
 
   @override
@@ -119,7 +162,33 @@ class _SearchPageState extends State<SearchPage>
       uv: searchData["current"]["uv"],
       winddir: searchData["current"]["wind_dir"],
     );
+
+    await SearchCache.saveWeather(
+      search_temp: searchModel.temperatur,
+      search_feelsLike: searchModel.feelslike!,
+      search_humidity: searchModel.humidity!,
+      search_wind: searchModel.wind!,
+      search_location: searchModel.location!,
+      search_description: searchModel.description!,
+      search_pressure: searchModel.pressure!,
+      search_tempmax: searchModel.tempmax!,
+      search_tempmin: searchModel.tempmin!,
+      search_winddir: searchModel.winddir!,
+      search_uv: searchModel.uv!,
+      search_chanceofrain: searchModel.chanceofrain!,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(
+      "search_lastUpdated",
+      DateTime.now().toIso8601String(),
+    );
+
+    final now = DateTime.now();
+
     setState(() {
+      searchLastUpdated = formatsearchLastUpdated(now);
       bolbColor();
     });
     reload();
@@ -151,6 +220,36 @@ class _SearchPageState extends State<SearchPage>
       Navigator.pop(context);
       isReloadHappend = false;
     }
+  }
+
+  Future<bool> loadCachedSearch() async {
+    final cache = await SearchCache.loadWeather();
+
+    if (cache == null) {
+      return false;
+    }
+
+    searchModel = SearchModel(
+      temperatur: cache["search_temp"],
+      feelslike: cache["search_feelsLike"],
+      humidity: cache["search_humidity"],
+      wind: cache["search_wind"],
+      location: cache["search_location"],
+      description: cache["search_description"],
+      chanceofrain: cache["search_chanceofrain"],
+      uv: cache["search_uv"],
+      winddir: cache["search_winddir"],
+      tempmin: cache["search_tempmin"],
+      tempmax: cache["search_tempmax"],
+      pressure: cache["search_pressure"],
+    );
+
+    setState(() {
+      isDataLoaded = true;
+      isErrorOccurd = false;
+    });
+
+    return true;
   }
 
   @override
@@ -318,6 +417,14 @@ class _SearchPageState extends State<SearchPage>
                                     style: GoogleFonts.monda(
                                       fontSize: 20,
                                       color: kMidLightColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    searchLastUpdated,
+                                    style: GoogleFonts.monda(
+                                      fontSize: 16,
+                                      color: kTextColor.withOpacity(0.7),
                                     ),
                                   ),
                                 ],

@@ -57,7 +57,7 @@ class DetailsWidget extends StatelessWidget {
         Text(
           detailText!,
           style: GoogleFonts.monda(
-            fontSize: 13,
+            fontSize: 11,
             color: colorDetail,
           ),
           textAlign: TextAlign.center,
