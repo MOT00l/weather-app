@@ -33,6 +33,7 @@ class Weather {
           "units": "metric",
         },
       );
+      print(request);
       return request.toString();
     }
 

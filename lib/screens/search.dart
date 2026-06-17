@@ -3,18 +3,18 @@ import 'dart:ui';
 import 'package:clima_weather/components/app_background.dart';
 import 'package:clima_weather/components/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/details_widget.dart';
-import '../components/error_message.dart';
-import '../components/loading_widget.dart';
 import '../components/refresh_loading.dart';
 import '../models/drang_handle.dart';
 import '../models/search_models.dart';
 import '../services/networking.dart';
 import '../services/serach_cache.dart';
 import '../utilities/constants.dart';
+import '../utilities/wearch_icon.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -40,6 +40,12 @@ class _SearchPageState extends State<SearchPage>
     location: "Loading...",
     description: "Loading...",
     icon: "assets/weather-icons/wi-time-1.svg",
+    tempmin: 0,
+    tempmax: 0,
+    pressure: 0,
+    winddir: "Loading",
+    uv: 0,
+    chanceofrain: "Loading",
   );
   int code = 0;
   bool isErrorOccurd = true;
@@ -144,6 +150,9 @@ class _SearchPageState extends State<SearchPage>
     }
 
     searchData = await searchLocationWeather();
+    final code = searchData["current"]["condition"]["code"];
+    final iconPath =
+        "assets/weather-icons/${getWeatherApiPrefix(code)}${kWeatherApiIcons[code.toString()]!["icon"]}.svg";
     searchModel = SearchModel(
       temperatur: searchData["current"]["temp_c"],
       location: searchData["location"]["name"] +
@@ -153,6 +162,7 @@ class _SearchPageState extends State<SearchPage>
       feelslike: searchData["current"]["feelslike_c"],
       humidity: searchData["current"]["humidity"],
       wind: searchData["current"]["wind_kph"],
+      icon: iconPath,
       lat: searchData["location"]["lat"],
       lon: searchData["location"]["lon"],
       tempmin: searchData["forecast"]["forecastday"][0]["day"]["mintemp_c"],
@@ -170,6 +180,7 @@ class _SearchPageState extends State<SearchPage>
       search_wind: searchModel.wind!,
       search_location: searchModel.location!,
       search_description: searchModel.description!,
+      search_icon: searchModel.icon!,
       search_pressure: searchModel.pressure!,
       search_tempmax: searchModel.tempmax!,
       search_tempmin: searchModel.tempmin!,
@@ -236,6 +247,7 @@ class _SearchPageState extends State<SearchPage>
       wind: cache["search_wind"],
       location: cache["search_location"],
       description: cache["search_description"],
+      icon: cache["search_icon"],
       chanceofrain: cache["search_chanceofrain"],
       uv: cache["search_uv"],
       winddir: cache["search_winddir"],
@@ -254,208 +266,210 @@ class _SearchPageState extends State<SearchPage>
 
   @override
   Widget build(BuildContext context) {
-    if (!isDataLoaded) {
-      return const LoadingWidget();
-    } else {
-      return Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: kOverlayColor,
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: AppBackground(
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(6.5),
-                        child: SizedBox(
-                          width: 360,
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: kOverlayColor,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: AppBackground(
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 360,
 
-                          // Top Row
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                                child: GlassContainer(
-                                  blurStrength: 15,
-                                  borderRadius: 30,
-                                  child: Icon(
-                                    Icons.arrow_back,
-                                    color: kHeadIconColor,
-                                  ),
+                      // Top Row
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Hero(
+                              tag: "menuButton",
+                              child: GlassContainer(
+                                blurStrength: 15,
+                                borderRadius: 30,
+                                child: Icon(
+                                  Icons.arrow_back,
+                                  color: kHeadIconColor,
                                 ),
-                              ),
-                              Expanded(
-                                child: GlassContainer(
-                                  blurStrength: 15,
-                                  borderRadius: 30,
-                                  child: SizedBox(
-                                    height: 25,
-                                    child: TextField(
-                                      controller: searchController,
-                                      onSubmitted: (value) {
-                                        if (searchController.text == "") {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              elevation: 0,
-                                              content: Container(
-                                                height: 60,
-                                                decoration: BoxDecoration(
-                                                  color: kGlassColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  border: Border.all(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                            alpha: 0.15),
-                                                  ),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    const SizedBox(width: 12),
-                                                    Icon(
-                                                      Icons.close,
-                                                      color: kHeadIconColor,
-                                                    ),
-                                                    const SizedBox(width: 12),
-                                                    Expanded(
-                                                      child: Text(
-                                                        "The Field Is Empty!",
-                                                        style: TextStyle(
-                                                          color: kHeadIconColor,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        } else {
-                                          isReloadHappend = true;
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              context = context;
-                                              return const RefreshLoading();
-                                            },
-                                          );
-                                          city = searchController.text;
-                                          getSearchedData();
-                                        }
-                                      },
-                                      style: TextStyle(
-                                        color: kHeadIconColor,
-                                      ),
-                                      decoration: InputDecoration(
-                                        prefixIcon: Icon(Icons.search),
-                                        prefixIconColor: kHeadIconColor,
-                                        contentPadding:
-                                            EdgeInsets.fromLTRB(20, 0, 0, 10),
-                                        border: InputBorder.none,
-                                        hintText: "Enter a city name",
-                                        hintStyle: GoogleFonts.monda(
-                                          fontSize: 17,
-                                          color: kHeadIconColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Middle Widget
-                      isErrorOccurd
-                          ? ErrorMessage(
-                              title: searchTitle,
-                              message: searchMessage,
-                            )
-                          : Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.location_city,
-                                        color: kMidLightColor,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        searchModel.location!,
-                                        style: GoogleFonts.monda(
-                                          fontSize: 20,
-                                          color: kMidLightColor,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  const SizedBox(height: 15),
-                                  Text(
-                                    "${searchModel.temperatur!.round()}°",
-                                    style: GoogleFonts.daysOne(
-                                      fontSize: 80,
-                                      color: kIconColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  Text(
-                                    searchModel.description!.toUpperCase(),
-                                    style: GoogleFonts.monda(
-                                      fontSize: 20,
-                                      color: kMidLightColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    searchLastUpdated,
-                                    style: GoogleFonts.monda(
-                                      fontSize: 16,
-                                      color: kTextColor.withOpacity(0.7),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
-                      SizedBox(
-                        height: 100,
-                        width: 450,
+                          ),
+                          Expanded(
+                            child: Hero(
+                              tag: "searchBar",
+                              child: GlassContainer(
+                                blurStrength: 15,
+                                borderRadius: 30,
+                                child: SizedBox(
+                                  height: 25,
+                                  child: TextField(
+                                    controller: searchController,
+                                    onSubmitted: (value) {
+                                      if (searchController.text == "") {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            behavior: SnackBarBehavior.floating,
+                                            backgroundColor: Colors.transparent,
+                                            elevation: 0,
+                                            content: Container(
+                                              height: 60,
+                                              decoration: BoxDecoration(
+                                                color: kGlassColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.15),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const SizedBox(width: 12),
+                                                  Icon(
+                                                    Icons.close,
+                                                    color: kHeadIconColor,
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Text(
+                                                      "The Field Is Empty!",
+                                                      style: TextStyle(
+                                                        color: kHeadIconColor,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        isReloadHappend = true;
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            context = context;
+                                            return const RefreshLoading();
+                                          },
+                                        );
+                                        city = searchController.text;
+                                        getSearchedData();
+                                      }
+                                    },
+                                    style: TextStyle(
+                                      color: kHeadIconColor,
+                                    ),
+                                    decoration: InputDecoration(
+                                      prefixIcon: Icon(Icons.search),
+                                      prefixIconColor: kHeadIconColor,
+                                      contentPadding:
+                                          EdgeInsets.fromLTRB(20, 0, 0, 10),
+                                      border: InputBorder.none,
+                                      hintText: "Enter a city name",
+                                      hintStyle: GoogleFonts.monda(
+                                        fontSize: 17,
+                                        color: kHeadIconColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                    ),
 
-            // Weather Bottom Sheet
-            Padding(
-              padding: EdgeInsets.only(bottom: 25),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: WeatherBottomSheet(
-                  controller: detailsController,
-                  searchModel: searchModel,
-                  isErrorOccurd: isErrorOccurd,
+                    // Middle Widget
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.location_city,
+                                color: kMidLightColor,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                searchModel.location!,
+                                style: GoogleFonts.monda(
+                                  fontSize: 20,
+                                  color: kMidLightColor,
+                                ),
+                              )
+                            ],
+                          ),
+                          const SizedBox(height: 25),
+                          AnimatedSwitcher(
+                            duration: Duration(milliseconds: 800),
+                            child: SvgPicture.asset(
+                              searchModel.icon ??
+                                  "assets/weather-icons/wi-time-1.svg",
+                              height: 280,
+                              colorFilter: ColorFilter.mode(
+                                kIconColor,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            "${searchModel.temperatur!.round()}°",
+                            style: GoogleFonts.daysOne(
+                              fontSize: 80,
+                              color: kIconColor,
+                            ),
+                          ),
+                          Text(
+                            searchModel.description!.toUpperCase(),
+                            style: GoogleFonts.monda(
+                              fontSize: 20,
+                              color: kMidLightColor,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            searchLastUpdated,
+                            style: GoogleFonts.monda(
+                              fontSize: 16,
+                              color: kTextColor.withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 100,
+                      width: 450,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
-      );
-    }
+          ),
+
+          // Weather Bottom Sheet
+          Padding(
+            padding: EdgeInsets.only(bottom: 25),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: WeatherBottomSheet(
+                controller: detailsController,
+                searchModel: searchModel,
+                isErrorOccurd: isErrorOccurd,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

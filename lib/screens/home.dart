@@ -86,9 +86,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       ),
     );
 
-    initializeWeather();
-    userThemeCall();
-    loadLastUpdated();
+    startup();
+  }
+
+  Future<void> startup() async {
+    await userThemeCall();
+    await loadLastUpdated();
+    await initializeWeather();
   }
 
 // ======================================
@@ -284,14 +288,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     preferences.setBool("ThemeMode", themeMode);
   }
 
-  void userThemeCall() async {
+  Future<void> userThemeCall() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
+
     themeBool = preferences.getBool("ThemeMode");
+
     if (themeBool == true) {
       iconMode = const Icon(
         Icons.nights_stay,
         color: Colors.white60,
       );
+
       iconModeStatus = true;
       darkSwitch();
     } else {
@@ -299,8 +306,13 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         Icons.light_mode,
         color: Color(0xFFFAFAFA),
       );
+
       iconModeStatus = false;
       lightSwitch();
+    }
+
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -343,6 +355,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       location: cache["location"],
       description: cache["description"],
       icon: cache["icon"],
+      pressure: cache["pressure"],
+      tempmax: cache["tempmax"],
+      tempmin: cache["tempmin"],
     );
 
     setState(() {
@@ -356,6 +371,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: kOverlayColor,
       body: Stack(
         children: [
@@ -378,14 +394,17 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                 menuOpen = !menuOpen;
                               });
                             },
-                            child: GlassContainer(
-                              blurStrength: 15,
-                              borderRadius: 30,
-                              child: Tooltip(
-                                message: "Will Open The Menu",
-                                child: Icon(
-                                  Icons.menu,
-                                  color: kHeadIconColor,
+                            child: Hero(
+                              tag: "menuButton",
+                              child: GlassContainer(
+                                blurStrength: 15,
+                                borderRadius: 30,
+                                child: Tooltip(
+                                  message: "Will Open The Menu",
+                                  child: Icon(
+                                    Icons.menu,
+                                    color: kHeadIconColor,
+                                  ),
                                 ),
                               ),
                             ),
@@ -399,19 +418,47 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SearchPage(),
+                                PageRouteBuilder(
+                                  transitionDuration:
+                                      const Duration(milliseconds: 450),
+                                  pageBuilder: (_, animation, __) =>
+                                      const SearchPage(),
+                                  transitionsBuilder: (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: ScaleTransition(
+                                        scale: Tween<double>(
+                                          begin: 0.98,
+                                          end: 1.0,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOut,
+                                          ),
+                                        ),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
                                 ),
                               );
                             },
-                            child: GlassContainer(
-                              blurStrength: 15,
-                              borderRadius: 30,
-                              child: Tooltip(
-                                message: "Will Navigate To Search Page",
-                                child: Icon(
-                                  Icons.search,
-                                  color: kHeadIconColor,
+                            child: Hero(
+                              tag: "searchBar",
+                              child: GlassContainer(
+                                blurStrength: 15,
+                                borderRadius: 30,
+                                child: Tooltip(
+                                  message: "Will Navigate To Search Page",
+                                  child: Icon(
+                                    Icons.search,
+                                    color: kHeadIconColor,
+                                  ),
                                 ),
                               ),
                             ),

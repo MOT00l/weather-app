@@ -8,6 +8,7 @@ class SearchCache {
     required double search_wind,
     required String search_location,
     required String search_description,
+    required String search_icon,
     required double search_tempmin,
     required double search_tempmax,
     required double search_pressure,
@@ -24,6 +25,7 @@ class SearchCache {
 
     await prefs.setString("search_location", search_location);
     await prefs.setString("search_description", search_description);
+    await prefs.setString("search_icon", search_icon);
 
     await prefs.setDouble("search_tempmin", search_tempmin);
     await prefs.setDouble("search_tempmax", search_tempmax);
@@ -52,6 +54,7 @@ class SearchCache {
       "search_wind": prefs.getDouble("search_wind"),
       "search_location": prefs.getString("search_location"),
       "search_description": prefs.getString("search_description"),
+      "search_icon": prefs.getString("search_icon"),
       "search_lastUpdate": prefs.getInt("search_lastUpdate"),
       "search_tempmin": prefs.getDouble("search_tempmin"),
       "search_tempmax": prefs.getDouble("search_tempmax"),

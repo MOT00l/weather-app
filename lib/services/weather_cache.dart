@@ -11,7 +11,7 @@ class WeatherCache {
     required String icon,
     required double tempmin,
     required double tempmax,
-    required double pressure,
+    required int pressure,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -26,12 +26,7 @@ class WeatherCache {
 
     await prefs.setDouble("tempmin", tempmin);
     await prefs.setDouble("tempmax", tempmax);
-    await prefs.setDouble("pressure", pressure);
-
-    await prefs.setInt(
-      "lastUpdate",
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await prefs.setInt("pressure", pressure);
   }
 
   static Future<Map<String, dynamic>?> loadWeather() async {
@@ -52,7 +47,7 @@ class WeatherCache {
       "lastUpdate": prefs.getInt("lastUpdate"),
       "tempmin": prefs.getDouble("tempmin"),
       "tempmax": prefs.getDouble("tempmax"),
-      "pressure": prefs.getDouble("pressure"),
+      "pressure": prefs.getInt("pressure"),
     };
   }
 }
