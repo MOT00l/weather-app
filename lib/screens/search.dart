@@ -14,7 +14,7 @@ import '../models/search_models.dart';
 import '../services/networking.dart';
 import '../services/serach_cache.dart';
 import '../utilities/constants.dart';
-import '../utilities/wearch_icon.dart';
+import '../utilities/search_icons.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:clima_weather/components/app_background.dart';
 import 'package:clima_weather/components/glass_container.dart';
 import 'package:clima_weather/models/weather_models.dart';
+import 'package:clima_weather/screens/forecast.dart';
 import 'package:clima_weather/screens/info.dart';
 import 'package:clima_weather/screens/search.dart';
 import 'package:clima_weather/services/weather.dart';
@@ -58,6 +59,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   bool? themeBool;
   bool? iconModeStatus;
   bool menuOpen = false;
+  bool bottomSheetOpen = false;
+  bool hubExpanded = false;
 
   // ======================================
   // DETAILS CARD ANIMATION
@@ -377,160 +380,215 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         children: [
           // Main Weather Content
           Positioned.fill(
-            child: AppBackground(
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: 360,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                setState(() {
+                  hubExpanded = false;
+                });
+              },
+              child: AppBackground(
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 360,
 
-                      //Top Row
-                      child: Row(
-                        children: [
-                          // Menu Button
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                menuOpen = !menuOpen;
-                              });
-                            },
-                            child: Hero(
-                              tag: "menuButton",
-                              child: GlassContainer(
-                                blurStrength: 15,
-                                borderRadius: 30,
-                                child: Tooltip(
-                                  message: "Will Open The Menu",
-                                  child: Icon(
-                                    Icons.menu,
-                                    color: kHeadIconColor,
+                        //Top Row
+                        child: Row(
+                          children: [
+                            // Menu Button
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  menuOpen = !menuOpen;
+                                });
+                              },
+                              child: Hero(
+                                tag: "menuButton",
+                                child: GlassContainer(
+                                  blurStrength: 15,
+                                  borderRadius: 30,
+                                  child: Tooltip(
+                                    message: "Will Open The Menu",
+                                    child: Icon(
+                                      Icons.menu,
+                                      color: kHeadIconColor,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: Card(),
-                          ),
+                            Expanded(
+                              child: Card(),
+                            ),
 
-                          //Search Page Button
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  transitionDuration:
-                                      const Duration(milliseconds: 450),
-                                  pageBuilder: (_, animation, __) =>
-                                      const SearchPage(),
-                                  transitionsBuilder: (
-                                    context,
-                                    animation,
-                                    secondaryAnimation,
-                                    child,
-                                  ) {
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: ScaleTransition(
-                                        scale: Tween<double>(
-                                          begin: 0.98,
-                                          end: 1.0,
-                                        ).animate(
-                                          CurvedAnimation(
-                                            parent: animation,
-                                            curve: Curves.easeOut,
+                            //Hub Button
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  hubExpanded = !hubExpanded;
+                                });
+                              },
+                              child: Hero(
+                                tag: "searchBar",
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                  width: hubExpanded ? 150 : 83,
+                                  height: 83,
+                                  child: GlassContainer(
+                                    blurStrength: 15,
+                                    borderRadius: 30,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            if (!hubExpanded) {
+                                              setState(() {
+                                                hubExpanded = true;
+                                              });
+                                            } else {
+                                              Navigator.push(
+                                                context,
+                                                PageRouteBuilder(
+                                                  transitionDuration:
+                                                      const Duration(
+                                                          milliseconds: 450),
+                                                  pageBuilder:
+                                                      (_, animation, __) =>
+                                                          const SearchPage(),
+                                                  transitionsBuilder: (
+                                                    context,
+                                                    animation,
+                                                    secondaryAnimation,
+                                                    child,
+                                                  ) {
+                                                    return FadeTransition(
+                                                      opacity: animation,
+                                                      child: ScaleTransition(
+                                                        scale: Tween<double>(
+                                                          begin: 0.98,
+                                                          end: 1.0,
+                                                        ).animate(animation),
+                                                        child: child,
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          child: Icon(
+                                            Icons.search,
+                                            color: kHeadIconColor,
                                           ),
                                         ),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                            child: Hero(
-                              tag: "searchBar",
-                              child: GlassContainer(
-                                blurStrength: 15,
-                                borderRadius: 30,
-                                child: Tooltip(
-                                  message: "Will Navigate To Search Page",
-                                  child: Icon(
-                                    Icons.search,
-                                    color: kHeadIconColor,
+                                        if (hubExpanded)
+                                          AnimatedOpacity(
+                                            duration: const Duration(
+                                                milliseconds: 200),
+                                            opacity: hubExpanded ? 1 : 0,
+                                            child: AnimatedSlide(
+                                              duration: const Duration(
+                                                  milliseconds: 250),
+                                              offset: hubExpanded
+                                                  ? Offset.zero
+                                                  : const Offset(0.5, 0),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const ForeCastPage(),
+                                                    ),
+                                                  );
+                                                },
+                                                child: Icon(
+                                                  Icons.calendar_today,
+                                                  color: kHeadIconColor,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
 
-                    //Middle Widgets
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.location_city,
-                                color: kMidLightColor,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                weatherModel.location!,
-                                style: GoogleFonts.monda(
-                                  fontSize: 20,
+                      //Middle Widgets
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_city,
                                   color: kMidLightColor,
                                 ),
-                              )
-                            ],
-                          ),
-                          const SizedBox(height: 25),
-                          AnimatedSwitcher(
-                            duration: Duration(milliseconds: 800),
-                            child: SvgPicture.asset(
-                              weatherModel.icon!,
-                              height: 280,
-                              colorFilter: ColorFilter.mode(
-                                kIconColor,
-                                BlendMode.srcIn,
+                                const SizedBox(width: 12),
+                                Text(
+                                  weatherModel.location!,
+                                  style: GoogleFonts.monda(
+                                    fontSize: 20,
+                                    color: kMidLightColor,
+                                  ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 25),
+                            AnimatedSwitcher(
+                              duration: Duration(milliseconds: 800),
+                              child: SvgPicture.asset(
+                                weatherModel.icon!,
+                                height: 280,
+                                colorFilter: ColorFilter.mode(
+                                  kIconColor,
+                                  BlendMode.srcIn,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            "${weatherModel.temperatur!.round()}°",
-                            style: GoogleFonts.daysOne(
-                              fontSize: 80,
-                              color: kIconColor,
+                            Text(
+                              "${weatherModel.temperatur!.round()}°",
+                              style: GoogleFonts.daysOne(
+                                fontSize: 80,
+                                color: kIconColor,
+                              ),
                             ),
-                          ),
-                          Text(
-                            weatherModel.description!.toUpperCase(),
-                            style: GoogleFonts.monda(
-                              fontSize: 20,
-                              color: kMidLightColor,
+                            Text(
+                              weatherModel.description!.toUpperCase(),
+                              style: GoogleFonts.monda(
+                                fontSize: 20,
+                                color: kMidLightColor,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            lastUpdated,
-                            style: GoogleFonts.monda(
-                              fontSize: 16,
-                              color: kTextColor.withOpacity(0.7),
+                            const SizedBox(height: 8),
+                            Text(
+                              lastUpdated,
+                              style: GoogleFonts.monda(
+                                fontSize: 16,
+                                color: kTextColor.withOpacity(0.7),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 100,
-                      width: 450,
-                    ),
-                  ],
+                      SizedBox(
+                        height: 100,
+                        width: 450,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
