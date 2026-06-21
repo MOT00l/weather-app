@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:clima_weather/components/app_background.dart';
@@ -71,11 +72,36 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // LAST UPDATE
   // ======================================
   String lastUpdated = "Updating...";
+  late Timer lastUpdatedTimer;
   String formatLastUpdated(DateTime dateTime) {
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final difference = DateTime.now().difference(dateTime);
 
-    return "Last updated: $hour:$minute";
+    if (difference.inMinutes < 1) {
+      return "Just updated";
+    }
+
+    if (difference.inMinutes < 60) {
+      final minutes = difference.inMinutes;
+      return "Last updated $minutes minute${minutes == 1 ? '' : 's'} ago";
+    }
+
+    if (difference.inHours < 12) {
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes % 60;
+
+      if (minutes == 0) {
+        return "Last updated $hours hour${hours == 1 ? '' : 's'} ago";
+      }
+
+      return "Last updated $hours hour${hours == 1 ? '' : 's'} "
+          "and $minutes minute${minutes == 1 ? '' : 's'} ago";
+    }
+
+    if (difference.inHours < 24) {
+      return "Last updated ${difference.inHours} hours ago";
+    }
+
+    return "Last updated more than a day ago";
   }
 
   @override
@@ -87,6 +113,22 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       duration: const Duration(
         milliseconds: 500,
       ),
+    );
+
+    lastUpdatedTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) async {
+        final prefs = await SharedPreferences.getInstance();
+        final savedTime = prefs.getString("lastUpdated");
+
+        if (savedTime == null || !mounted) return;
+
+        setState(() {
+          lastUpdated = formatLastUpdated(
+            DateTime.parse(savedTime),
+          );
+        });
+      },
     );
 
     startup();
@@ -126,6 +168,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    lastUpdatedTimer.cancel();
     detailsController.dispose();
     super.dispose();
   }
@@ -453,32 +496,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                                             } else {
                                               Navigator.push(
                                                 context,
-                                                PageRouteBuilder(
-                                                  transitionDuration:
-                                                      const Duration(
-                                                          milliseconds: 450),
-                                                  pageBuilder:
-                                                      (_, animation, __) =>
-                                                          const SearchPage(),
-                                                  transitionsBuilder: (
-                                                    context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                    child,
-                                                  ) {
-                                                    return FadeTransition(
-                                                      opacity: animation,
-                                                      child: ScaleTransition(
-                                                        scale: Tween<double>(
-                                                          begin: 0.98,
-                                                          end: 1.0,
-                                                        ).animate(animation),
-                                                        child: child,
-                                                      ),
-                                                    );
-                                                  },
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const SearchPage(),
                                                 ),
                                               );
+                                              ;
                                             }
                                           },
                                           child: Icon(

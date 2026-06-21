@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:clima_weather/models/forecast_model.dart';
+import 'package:clima_weather/services/forecast_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../components/app_background.dart';
 import '../components/glass_container.dart';
@@ -22,6 +26,7 @@ class _ForeCastPageState extends State<ForeCastPage> {
   final TextEditingController searchController = TextEditingController();
 
   bool isReloadHappend = false;
+  late Timer ForecastLastUpdatedTimer;
 
   late String city;
   late var forecastData;
@@ -43,6 +48,53 @@ class _ForeCastPageState extends State<ForeCastPage> {
     tempmin2: 0,
     tempmin3: 0,
   );
+
+  String forecastLastUpdated = "Updating...";
+  String formatForecastLastUpdated(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return "Just updated";
+    }
+
+    if (difference.inMinutes < 60) {
+      final minutes = difference.inMinutes;
+      return "Last updated $minutes minute${minutes == 1 ? '' : 's'} ago";
+    }
+
+    if (difference.inHours < 12) {
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes % 60;
+
+      if (minutes == 0) {
+        return "Last updated $hours hour${hours == 1 ? '' : 's'} ago";
+      }
+
+      return "Last updated $hours hour${hours == 1 ? '' : 's'} "
+          "and $minutes minute${minutes == 1 ? '' : 's'} ago";
+    }
+
+    if (difference.inHours < 24) {
+      return "Last updated ${difference.inHours} hours ago";
+    }
+
+    return "Last updated more than a day ago";
+  }
+
+  Future<void> loadForecastLastUpdated() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final savedTime = prefs.getString("forecast_lastUpdated");
+
+    if (savedTime == null) return;
+
+    final dateTime = DateTime.parse(savedTime);
+
+    setState(() {
+      forecastLastUpdated = formatForecastLastUpdated(dateTime);
+    });
+  }
+
   final snackBar = SnackBar(
     content: Text(
       "No City Name Was Given",
@@ -55,6 +107,25 @@ class _ForeCastPageState extends State<ForeCastPage> {
   @override
   void initState() {
     super.initState();
+
+    loadForecastLastUpdated();
+
+    ForecastLastUpdatedTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) {
+        loadForecastLastUpdated();
+      },
+    );
+
+    initializeForecast();
+    loadForecastLastUpdated();
+  }
+
+  // ======================================
+  // SEARCH DATA
+  // ======================================
+  Future<void> initializeForecast() async {
+    await loadCachedForecast();
   }
 
   void getForecastData() async {
@@ -99,26 +170,64 @@ class _ForeCastPageState extends State<ForeCastPage> {
     final iconPath3 =
         "assets/weather-icons/${getWeatherApiPrefix(code3)}${kWeatherApiIcons[code3.toString()]!["icon"]}.svg";
 
-    forecastModel = ForecastModel(
-      date1: forecastData["forecast"]["forecastday"][0]["date"],
-      date2: forecastData["forecast"]["forecastday"][1]["date"],
-      date3: forecastData["forecast"]["forecastday"][2]["date"],
-      tempmin1: forecastData["forecast"]["forecastday"][0]["day"]["mintemp_c"],
-      tempmin2: forecastData["forecast"]["forecastday"][1]["day"]["mintemp_c"],
-      tempmin3: forecastData["forecast"]["forecastday"][2]["day"]["mintemp_c"],
-      tempmax1: forecastData["forecast"]["forecastday"][0]["day"]["maxtemp_c"],
-      tempmax2: forecastData["forecast"]["forecastday"][1]["day"]["maxtemp_c"],
-      tempmax3: forecastData["forecast"]["forecastday"][2]["day"]["maxtemp_c"],
-      maxwind1: forecastData["forecast"]["forecastday"][0]["day"]
-          ["maxwind_kph"],
-      maxwind2: forecastData["forecast"]["forecastday"][1]["day"]
-          ["maxwind_kph"],
-      maxwind3: forecastData["forecast"]["forecastday"][2]["day"]
-          ["maxwind_kph"],
-      icon1: iconPath1,
-      icon2: iconPath2,
-      icon3: iconPath3,
+    setState(() {
+      forecastModel = ForecastModel(
+        date1: forecastData["forecast"]["forecastday"][0]["date"],
+        date2: forecastData["forecast"]["forecastday"][1]["date"],
+        date3: forecastData["forecast"]["forecastday"][2]["date"],
+        tempmin1: forecastData["forecast"]["forecastday"][0]["day"]
+            ["mintemp_c"],
+        tempmin2: forecastData["forecast"]["forecastday"][1]["day"]
+            ["mintemp_c"],
+        tempmin3: forecastData["forecast"]["forecastday"][2]["day"]
+            ["mintemp_c"],
+        tempmax1: forecastData["forecast"]["forecastday"][0]["day"]
+            ["maxtemp_c"],
+        tempmax2: forecastData["forecast"]["forecastday"][1]["day"]
+            ["maxtemp_c"],
+        tempmax3: forecastData["forecast"]["forecastday"][2]["day"]
+            ["maxtemp_c"],
+        maxwind1: forecastData["forecast"]["forecastday"][0]["day"]
+            ["maxwind_kph"],
+        maxwind2: forecastData["forecast"]["forecastday"][1]["day"]
+            ["maxwind_kph"],
+        maxwind3: forecastData["forecast"]["forecastday"][2]["day"]
+            ["maxwind_kph"],
+        icon1: iconPath1,
+        icon2: iconPath2,
+        icon3: iconPath3,
+      );
+    });
+
+    await ForecastCache.saveWeather(
+      forecast_date1: forecastModel.date1,
+      forecast_date2: forecastModel.date2,
+      forecast_date3: forecastModel.date3,
+      forecast_icon1: forecastModel.icon1!,
+      forecast_icon2: forecastModel.icon2!,
+      forecast_icon3: forecastModel.icon3!,
+      forecast_maxwind1: forecastModel.maxwind1!,
+      forecast_maxwind2: forecastModel.maxwind2!,
+      forecast_maxwind3: forecastModel.maxwind3!,
+      forecast_tempmax1: forecastModel.tempmax1!,
+      forecast_tempmax2: forecastModel.tempmax2!,
+      forecast_tempmax3: forecastModel.tempmax3!,
+      forecast_tempmin1: forecastModel.tempmin1!,
+      forecast_tempmin2: forecastModel.tempmin2!,
+      forecast_tempmin3: forecastModel.tempmin3!,
     );
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString(
+      "forecast_lastUpdated",
+      DateTime.now().toIso8601String(),
+    );
+
+    final now = DateTime.now();
+    setState(() {
+      forecastLastUpdated = formatForecastLastUpdated(now);
+    });
 
     reload();
   }
@@ -128,6 +237,49 @@ class _ForeCastPageState extends State<ForeCastPage> {
       Navigator.pop(context);
       isReloadHappend = false;
     }
+  }
+
+  Future<bool> loadCachedForecast() async {
+    final cache = await ForecastCache.loadWeather();
+
+    if (cache == null) {
+      return false;
+    }
+    forecastModel = ForecastModel(
+      icon1: cache["forecast_icon1"],
+      icon2: cache["forecast_icon2"],
+      icon3: cache["forecast_icon3"],
+      maxwind1: cache["forecast_maxwind1"],
+      maxwind2: cache["forecast_maxwind2"],
+      maxwind3: cache["forecast_maxwind3"],
+      tempmax1: cache["forecast_tempmax1"],
+      tempmax2: cache["forecast_tempmax2"],
+      tempmax3: cache["forecast_tempmax3"],
+      tempmin1: cache["forecast_tempmin1"],
+      tempmin2: cache["forecast_tempmin2"],
+      tempmin3: cache["forecast_tempmin3"],
+      date1: cache["forecast_date1"],
+      date2: cache["forecast_date2"],
+      date3: cache["forecast_date3"],
+    );
+    return true;
+  }
+
+  Future<void> loadLastCity() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedCity = prefs.getString("forecast_last_city");
+
+    if (savedCity != null && savedCity.isNotEmpty) {
+      searchController.text = savedCity;
+      city = savedCity;
+    }
+  }
+
+  @override
+  void dispose() {
+    ForecastLastUpdatedTimer.cancel();
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -174,7 +326,7 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                   height: 25,
                                   child: TextField(
                                     controller: searchController,
-                                    onSubmitted: (value) {
+                                    onSubmitted: (value) async {
                                       if (searchController.text == "") {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
@@ -224,6 +376,10 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                           },
                                         );
                                         city = searchController.text;
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+                                        await prefs.setString(
+                                            "forecast_last_city", city);
                                         getForecastData();
                                       }
                                     },
@@ -253,21 +409,26 @@ class _ForeCastPageState extends State<ForeCastPage> {
 
                     // Middle Widget
                     Expanded(
-                      child: Center(
-                        child: GlassContainer(
-                          blurStrength: 15,
-                          borderRadius: 30,
-                          child: SizedBox(
-                            width: 360,
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 40,
-                                    ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            forecastLastUpdated,
+                            style: GoogleFonts.monda(
+                              fontSize: 14,
+                              color: kTextColor.withOpacity(0.7),
+                            ),
+                          ),
+                          GlassContainer(
+                            blurStrength: 15,
+                            borderRadius: 30,
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 150, 0, 150),
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
                                     child: Padding(
-                                      padding: EdgeInsets.only(top: 250),
+                                      padding: EdgeInsets.only(top: 80),
                                       child: CustomPaint(
                                         painter: TemperatureGraphPainter(
                                           maxTemps: [
@@ -284,57 +445,57 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                       ),
                                     ),
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ForecastDayCard(
-                                        date:
-                                            forecastModel.date1 ?? "Loading...",
-                                        icon: forecastModel.icon1 ??
-                                            "assets/weather-icons/wi-time-1.svg",
-                                        maxTemp:
-                                            "${forecastModel.tempmax1?.round() ?? 0}°",
-                                        minTemp:
-                                            "${forecastModel.tempmin1?.round() ?? 0}°",
-                                        maxWind:
-                                            "${forecastModel.maxwind1?.round() ?? 0}",
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: ForecastDayCard(
+                                          date: forecastModel.date1 ??
+                                              "Loading...",
+                                          icon: forecastModel.icon1 ??
+                                              "assets/weather-icons/wi-time-1.svg",
+                                          maxTemp:
+                                              "${forecastModel.tempmax1?.round() ?? 0}°",
+                                          minTemp:
+                                              "${forecastModel.tempmin1?.round() ?? 0}°",
+                                          maxWind:
+                                              "${forecastModel.maxwind1?.round() ?? 0}",
+                                        ),
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: ForecastDayCard(
-                                        date:
-                                            forecastModel.date2 ?? "Loading...",
-                                        icon: forecastModel.icon2 ??
-                                            "assets/weather-icons/wi-time-1.svg",
-                                        maxTemp:
-                                            "${forecastModel.tempmax2?.round() ?? 0}°",
-                                        minTemp:
-                                            "${forecastModel.tempmin2?.round() ?? 0}°",
-                                        maxWind:
-                                            "${forecastModel.maxwind2?.round() ?? 0}",
+                                      Expanded(
+                                        child: ForecastDayCard(
+                                          date: forecastModel.date2 ??
+                                              "Loading...",
+                                          icon: forecastModel.icon2 ??
+                                              "assets/weather-icons/wi-time-1.svg",
+                                          maxTemp:
+                                              "${forecastModel.tempmax2?.round() ?? 0}°",
+                                          minTemp:
+                                              "${forecastModel.tempmin2?.round() ?? 0}°",
+                                          maxWind:
+                                              "${forecastModel.maxwind2?.round() ?? 0}",
+                                        ),
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: ForecastDayCard(
-                                        date:
-                                            forecastModel.date3 ?? "Loading...",
-                                        icon: forecastModel.icon3 ??
-                                            "assets/weather-icons/wi-time-1.svg",
-                                        maxTemp:
-                                            "${forecastModel.tempmax3?.round() ?? 0}°",
-                                        minTemp:
-                                            "${forecastModel.tempmin3?.round() ?? 0}°",
-                                        maxWind:
-                                            "${forecastModel.maxwind3?.round() ?? 0}",
+                                      Expanded(
+                                        child: ForecastDayCard(
+                                          date: forecastModel.date3 ??
+                                              "Loading...",
+                                          icon: forecastModel.icon3 ??
+                                              "assets/weather-icons/wi-time-1.svg",
+                                          maxTemp:
+                                              "${forecastModel.tempmax3?.round() ?? 0}°",
+                                          minTemp:
+                                              "${forecastModel.tempmin3?.round() ?? 0}°",
+                                          maxWind:
+                                              "${forecastModel.maxwind3?.round() ?? 0}",
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],

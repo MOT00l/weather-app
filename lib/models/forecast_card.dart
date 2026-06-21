@@ -32,7 +32,7 @@ class ForecastDayCard extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 10),
         SvgPicture.asset(
           icon,
           height: 100,
@@ -41,23 +41,7 @@ class ForecastDayCard extends StatelessWidget {
             BlendMode.srcIn,
           ),
         ),
-        const SizedBox(height: 30),
-        Text(
-          maxTemp,
-          style: GoogleFonts.daysOne(
-            fontSize: 20,
-            color: kIconColor,
-          ),
-        ),
-        const SizedBox(height: 50),
-        Text(
-          minTemp,
-          style: GoogleFonts.daysOne(
-            fontSize: 20,
-            color: kIconColor,
-          ),
-        ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 200),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.baseline,

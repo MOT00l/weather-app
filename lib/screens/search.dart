@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:clima_weather/components/app_background.dart';
@@ -71,11 +72,36 @@ class _SearchPageState extends State<SearchPage>
   // LAST UPDATE
   // ======================================
   String searchLastUpdated = "Updating...";
-  String formatsearchLastUpdated(DateTime dateTime) {
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
+  late Timer searchLastUpdatedTimer;
+  String formatSearchLastUpdated(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
 
-    return "Last updated: $hour:$minute";
+    if (difference.inMinutes < 1) {
+      return "Just updated";
+    }
+
+    if (difference.inMinutes < 60) {
+      final minutes = difference.inMinutes;
+      return "Last updated $minutes minute${minutes == 1 ? '' : 's'} ago";
+    }
+
+    if (difference.inHours < 12) {
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes % 60;
+
+      if (minutes == 0) {
+        return "Last updated $hours hour${hours == 1 ? '' : 's'} ago";
+      }
+
+      return "Last updated $hours hour${hours == 1 ? '' : 's'} "
+          "and $minutes minute${minutes == 1 ? '' : 's'} ago";
+    }
+
+    if (difference.inHours < 24) {
+      return "Last updated ${difference.inHours} hours ago";
+    }
+
+    return "Last updated more than a day ago";
   }
 
   @override
@@ -87,6 +113,22 @@ class _SearchPageState extends State<SearchPage>
       duration: const Duration(
         milliseconds: 500,
       ),
+    );
+
+    searchLastUpdatedTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) async {
+        final prefs = await SharedPreferences.getInstance();
+        final savedTime = prefs.getString("lastUpdated");
+
+        if (savedTime == null || !mounted) return;
+
+        setState(() {
+          searchLastUpdated = formatSearchLastUpdated(
+            DateTime.parse(savedTime),
+          );
+        });
+      },
     );
 
     initializeSearch();
@@ -113,12 +155,13 @@ class _SearchPageState extends State<SearchPage>
     final dateTime = DateTime.parse(savedTime);
 
     setState(() {
-      searchLastUpdated = formatsearchLastUpdated(dateTime);
+      searchLastUpdated = formatSearchLastUpdated(dateTime);
     });
   }
 
   @override
   void dispose() {
+    searchLastUpdatedTimer.cancel();
     detailsController.dispose();
     super.dispose();
   }
@@ -199,7 +242,7 @@ class _SearchPageState extends State<SearchPage>
     final now = DateTime.now();
 
     setState(() {
-      searchLastUpdated = formatsearchLastUpdated(now);
+      searchLastUpdated = formatSearchLastUpdated(now);
       bolbColor();
     });
     reload();
@@ -372,7 +415,7 @@ class _SearchPageState extends State<SearchPage>
                                       border: InputBorder.none,
                                       hintText: "Enter a city name",
                                       hintStyle: GoogleFonts.monda(
-                                        fontSize: 17,
+                                        fontSize: 15,
                                         color: kHeadIconColor,
                                       ),
                                     ),

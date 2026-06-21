@@ -33,10 +33,12 @@ class TemperatureGraphPainter extends CustomPainter {
 
     final minTempValue = minTemps.reduce((a, b) => a < b ? a : b);
 
-    final xStep = size.width / (maxTemps.length - 1);
+    final sectionWidth = size.width / maxTemps.length;
+    // final xStep = size.width / (maxTemps.length - 1);
 
     for (int i = 0; i < maxTemps.length; i++) {
-      final x = i * xStep;
+      final x = sectionWidth * i + sectionWidth / 2;
+      // final x = i * xStep;
 
       final maxY = topY - ((maxTemps[i] - maxTempValue) * 8);
 
@@ -55,11 +57,53 @@ class TemperatureGraphPainter extends CustomPainter {
         5,
         dotPaint,
       );
+      final maxTextPainter = TextPainter(
+        text: TextSpan(
+          text: "${maxTemps[i].round()}°",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+
+      maxTextPainter.layout();
+
+      maxTextPainter.paint(
+        canvas,
+        Offset(
+          x - maxTextPainter.width / 2,
+          maxY - 35,
+        ),
+      );
 
       canvas.drawCircle(
         Offset(x, minY),
         5,
         dotPaint,
+      );
+      final minTextPainter = TextPainter(
+        text: TextSpan(
+          text: "${minTemps[i].round()}°",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+
+      minTextPainter.layout();
+
+      minTextPainter.paint(
+        canvas,
+        Offset(
+          x - minTextPainter.width / 2,
+          minY + 12,
+        ),
       );
     }
 
