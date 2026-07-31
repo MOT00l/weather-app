@@ -308,7 +308,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   /// With this function user can switch into darkmode.
   void darkSwitch() {
     kOverlayColor = ThemeClass().darkBackgroundColor;
-    kIconColor = ThemeClass().darkPrimeryColor;
+    kIconColor = ThemeClass().darkPrimaryColor;
     kMidLightColor = ThemeClass().darkPrimaryTextColor;
     kCardColor = ThemeClass().darkSecondaryTextColor;
     kDarkColor = ThemeClass().darkDetailTextColor;

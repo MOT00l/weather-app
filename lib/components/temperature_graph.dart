@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utilities/constants.dart';
+
 class TemperatureGraphPainter extends CustomPainter {
   final List<double> maxTemps;
   final List<double> minTemps;
@@ -12,16 +14,16 @@ class TemperatureGraphPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final maxPaint = Paint()
-      ..color = Colors.white70
+      ..color = kTextColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
     final minPaint = Paint()
-      ..color = Colors.white54
+      ..color = kTextColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
-    final dotPaint = Paint()..color = Colors.white;
+    final dotPaint = Paint()..color = kIconColor;
 
     final maxPath = Path();
     final minPath = Path();
@@ -60,8 +62,8 @@ class TemperatureGraphPainter extends CustomPainter {
       final maxTextPainter = TextPainter(
         text: TextSpan(
           text: "${maxTemps[i].round()}°",
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: kIconColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -87,8 +89,8 @@ class TemperatureGraphPainter extends CustomPainter {
       final minTextPainter = TextPainter(
         text: TextSpan(
           text: "${minTemps[i].round()}°",
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: kIconColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),

@@ -17,6 +17,7 @@ class ForecastCache {
     required String forecast_icon1,
     required String forecast_icon2,
     required String forecast_icon3,
+    required String forecast_location,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -39,6 +40,9 @@ class ForecastCache {
     await prefs.setDouble("forecast_maxwind1", forecast_maxwind1);
     await prefs.setDouble("forecast_maxwind2", forecast_maxwind2);
     await prefs.setDouble("forecast_maxwind3", forecast_maxwind3);
+
+    await prefs.setString("forecast_location", forecast_location);
+
     await prefs.setInt(
       "forecast_lastUpdate",
       DateTime.now().millisecondsSinceEpoch,
@@ -64,6 +68,7 @@ class ForecastCache {
       "forecast_maxwind1": prefs.getDouble("forecast_maxwind1"),
       "forecast_maxwind2": prefs.getDouble("forecast_maxwind2"),
       "forecast_maxwind3": prefs.getDouble("forecast_maxwind3"),
+      "forecast_location": prefs.getString("forecast_location"),
     };
   }
 }

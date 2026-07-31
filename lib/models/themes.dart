@@ -12,14 +12,14 @@ class ThemeClass {
   Color lightIconColor = Colors.black;
   Color lightLoadColor = Colors.black;
   Color lightLoadingColor = Colors.white;
-  Color lightTextColor = Colors.black;
+  Color lightTextColor = Colors.black.withValues(alpha: 0.3);
   Color lightGlassColor = Colors.white;
   Color lightGradientOne = Color(0xFFFDFDFD);
   Color lightGradientTwo = Color(0xFFF5F5F7);
   Color lightGradientThree = Color(0xFFEDEEF1);
 
   Color darkBackgroundColor = Colors.black;
-  Color darkPrimeryColor = Colors.white;
+  Color darkPrimaryColor = Colors.white;
   Color darkPrimaryTextColor = Colors.white60;
   Color darkSecondaryTextColor = Colors.white12;
   Color darkDetailTextColor = Colors.white24;

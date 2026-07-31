@@ -59,8 +59,9 @@ flutter:
   uses-material-design: true
   assets:
    - assets/
+   - assets/cities.json
    - assets/weather-icons/
-  #   - images/a_dot_ham.jpeg
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,6 +1,6 @@
 class ForecastModel {
   dynamic date1, date2, date3;
-  String? icon1, icon2, icon3;
+  String? icon1, icon2, icon3, location;
   double? tempmax1,
       tempmax2,
       tempmax3,
@@ -27,5 +27,6 @@ class ForecastModel {
     this.tempmin1,
     this.tempmin2,
     this.tempmin3,
+    this.location,
   });
 }

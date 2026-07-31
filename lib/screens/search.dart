@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:clima_weather/components/app_background.dart';
 import 'package:clima_weather/components/glass_container.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,6 +64,12 @@ class _SearchPageState extends State<SearchPage>
     duration: Duration(seconds: 3),
     backgroundColor: kIconColor,
   );
+
+  // ======================================
+  // LOCATION SUGGEST
+  // ======================================
+  List<String> cities = [];
+  List<String> suggestions = [];
 
   // ======================================
   // DETAILS CARD ANIMATION
@@ -133,6 +141,7 @@ class _SearchPageState extends State<SearchPage>
 
     initializeSearch();
     loadSearchLastUpdated();
+    loadCities();
   }
 
   // ======================================
@@ -193,6 +202,19 @@ class _SearchPageState extends State<SearchPage>
     }
 
     searchData = await searchLocationWeather();
+    if (searchData["error"] != null) {
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            searchData["error"]["message"],
+          ),
+        ),
+      );
+
+      return;
+    }
     final code = searchData["current"]["condition"]["code"];
     final iconPath =
         "assets/weather-icons/${getWeatherApiPrefix(code)}${kWeatherApiIcons[code.toString()]!["icon"]}.svg";
@@ -307,6 +329,32 @@ class _SearchPageState extends State<SearchPage>
     return true;
   }
 
+  Future<void> loadCities() async {
+    final String data = await rootBundle.loadString('assets/cities.json');
+
+    cities = List<String>.from(
+      jsonDecode(data),
+    );
+  }
+
+  void updateSuggestions(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        suggestions = [];
+      });
+      return;
+    }
+
+    setState(() {
+      suggestions = cities
+          .where(
+            (city) => city.toLowerCase().startsWith(query.toLowerCase()),
+          )
+          .take(8)
+          .toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -351,6 +399,7 @@ class _SearchPageState extends State<SearchPage>
                                   height: 25,
                                   child: TextField(
                                     controller: searchController,
+                                    onChanged: updateSuggestions,
                                     onSubmitted: (value) {
                                       if (searchController.text == "") {
                                         ScaffoldMessenger.of(context)
@@ -497,6 +546,39 @@ class _SearchPageState extends State<SearchPage>
               ),
             ),
           ),
+
+          //SUGGESTION PANEL
+          if (suggestions.isNotEmpty)
+            Positioned(
+              top: 120,
+              left: 110,
+              width: 280,
+              child: GlassContainer(
+                blurStrength: 15,
+                borderRadius: 30,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: suggestions.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(
+                        suggestions[index],
+                        style: TextStyle(
+                          color: kHeadIconColor,
+                        ),
+                      ),
+                      onTap: () {
+                        searchController.text = suggestions[index];
+
+                        setState(() {
+                          suggestions.clear();
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
 
           // Weather Bottom Sheet
           Padding(

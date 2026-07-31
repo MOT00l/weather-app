@@ -47,6 +47,7 @@ class _ForeCastPageState extends State<ForeCastPage> {
     tempmin1: 0,
     tempmin2: 0,
     tempmin3: 0,
+    location: "Loading...",
   );
 
   String forecastLastUpdated = "Updating...";
@@ -196,6 +197,9 @@ class _ForeCastPageState extends State<ForeCastPage> {
         icon1: iconPath1,
         icon2: iconPath2,
         icon3: iconPath3,
+        location: forecastData["location"]["name"] +
+            ", " +
+            forecastData["location"]["country"],
       );
     });
 
@@ -215,6 +219,7 @@ class _ForeCastPageState extends State<ForeCastPage> {
       forecast_tempmin1: forecastModel.tempmin1!,
       forecast_tempmin2: forecastModel.tempmin2!,
       forecast_tempmin3: forecastModel.tempmin3!,
+      forecast_location: forecastModel.location!,
     );
 
     final prefs = await SharedPreferences.getInstance();
@@ -261,6 +266,7 @@ class _ForeCastPageState extends State<ForeCastPage> {
       date1: cache["forecast_date1"],
       date2: cache["forecast_date2"],
       date3: cache["forecast_date3"],
+      location: cache["forecast_location"],
     );
     return true;
   }
@@ -409,21 +415,31 @@ class _ForeCastPageState extends State<ForeCastPage> {
 
                     // Middle Widget
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            forecastLastUpdated,
-                            style: GoogleFonts.monda(
-                              fontSize: 14,
-                              color: kTextColor.withOpacity(0.7),
+                      child: GlassContainer(
+                        blurStrength: 15,
+                        borderRadius: 30,
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 50),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_city,
+                                  color: kMidLightColor,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  forecastModel.location ?? "Loading...",
+                                  style: GoogleFonts.monda(
+                                    fontSize: 20,
+                                    color: kMidLightColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          GlassContainer(
-                            blurStrength: 15,
-                            borderRadius: 30,
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 150, 0, 150),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(0, 100, 0, 80),
                               child: Stack(
                                 children: [
                                   Positioned.fill(
@@ -494,8 +510,15 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              forecastLastUpdated,
+                              style: GoogleFonts.monda(
+                                fontSize: 14,
+                                color: kTextColor.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
