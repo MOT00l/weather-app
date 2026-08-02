@@ -117,10 +117,11 @@ flutter run
 - [ ] Weather alerts
 - [ ] Dynamic weather animations
 - [ ] Home screen widgets
-- [ ] GPS location support
+- [x] GPS location support
 - [ ] Favorite cities
-- [ ] Dark & Light themes
+- [x] Dark & Light themes
 - [ ] Offline forecast support
+- [x] Search suggestion 
 
 ---
 

@@ -29,6 +29,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController searchController = TextEditingController();
+  final LayerLink _searchBarLink = LayerLink();
   bool isDataLoaded = true;
   bool isReloadHappend = false;
   late String name;
@@ -348,7 +349,7 @@ class _SearchPageState extends State<SearchPage>
     setState(() {
       suggestions = cities
           .where(
-            (city) => city.toLowerCase().startsWith(query.toLowerCase()),
+            (city) => city.toLowerCase().contains(query.toLowerCase()),
           )
           .take(8)
           .toList();
@@ -390,82 +391,88 @@ class _SearchPageState extends State<SearchPage>
                             ),
                           ),
                           Expanded(
-                            child: Hero(
-                              tag: "searchBar",
-                              child: GlassContainer(
-                                blurStrength: 15,
-                                borderRadius: 30,
-                                child: SizedBox(
-                                  height: 25,
-                                  child: TextField(
-                                    controller: searchController,
-                                    onChanged: updateSuggestions,
-                                    onSubmitted: (value) {
-                                      if (searchController.text == "") {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            behavior: SnackBarBehavior.floating,
-                                            backgroundColor: Colors.transparent,
-                                            elevation: 0,
-                                            content: Container(
-                                              height: 60,
-                                              decoration: BoxDecoration(
-                                                color: kGlassColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.15),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  const SizedBox(width: 12),
-                                                  Icon(
-                                                    Icons.close,
-                                                    color: kHeadIconColor,
+                            child: CompositedTransformTarget(
+                              link: _searchBarLink,
+                              child: Hero(
+                                tag: "searchBar",
+                                child: GlassContainer(
+                                  blurStrength: 15,
+                                  borderRadius: 30,
+                                  child: SizedBox(
+                                    height: 25,
+                                    child: TextField(
+                                      controller: searchController,
+                                      onChanged: updateSuggestions,
+                                      onSubmitted: (value) {
+                                        if (searchController.text == "") {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              elevation: 0,
+                                              content: Container(
+                                                height: 60,
+                                                decoration: BoxDecoration(
+                                                  color: kGlassColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  border: Border.all(
+                                                    color: Colors.white
+                                                        .withValues(
+                                                            alpha: 0.15),
                                                   ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Text(
-                                                      "The Field Is Empty!",
-                                                      style: TextStyle(
-                                                        color: kHeadIconColor,
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(width: 12),
+                                                    Icon(
+                                                      Icons.close,
+                                                      color: kHeadIconColor,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Text(
+                                                        "The Field Is Empty!",
+                                                        style: TextStyle(
+                                                          color: kHeadIconColor,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      } else {
-                                        isReloadHappend = true;
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            context = context;
-                                            return const RefreshLoading();
-                                          },
-                                        );
-                                        city = searchController.text;
-                                        getSearchedData();
-                                      }
-                                    },
-                                    style: TextStyle(
-                                      color: kHeadIconColor,
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(Icons.search),
-                                      prefixIconColor: kHeadIconColor,
-                                      contentPadding:
-                                          EdgeInsets.fromLTRB(20, 0, 0, 10),
-                                      border: InputBorder.none,
-                                      hintText: "Enter a city name",
-                                      hintStyle: GoogleFonts.monda(
-                                        fontSize: 15,
+                                          );
+                                        } else {
+                                          isReloadHappend = true;
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              context = context;
+                                              return const RefreshLoading();
+                                            },
+                                          );
+                                          city = searchController.text;
+                                          getSearchedData();
+                                        }
+                                      },
+                                      style: TextStyle(
                                         color: kHeadIconColor,
+                                      ),
+                                      decoration: InputDecoration(
+                                        prefixIcon: Icon(Icons.search),
+                                        prefixIconColor: kHeadIconColor,
+                                        contentPadding:
+                                            EdgeInsets.fromLTRB(20, 0, 0, 10),
+                                        border: InputBorder.none,
+                                        hintText: "Enter a city name",
+                                        hintStyle: GoogleFonts.monda(
+                                          fontSize: 15,
+                                          color: kHeadIconColor,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -549,33 +556,61 @@ class _SearchPageState extends State<SearchPage>
 
           //SUGGESTION PANEL
           if (suggestions.isNotEmpty)
-            Positioned(
-              top: 120,
-              left: 110,
-              width: 280,
-              child: GlassContainer(
-                blurStrength: 15,
-                borderRadius: 30,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: suggestions.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(
-                        suggestions[index],
-                        style: TextStyle(
-                          color: kHeadIconColor,
+            CompositedTransformFollower(
+              link: _searchBarLink,
+              showWhenUnlinked: false,
+              offset: const Offset(0, 60),
+              child: Material(
+                color: Colors.transparent,
+                child: Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: SizedBox(
+                    width: 280,
+                    child: GlassContainer(
+                      blurStrength: 15,
+                      borderRadius: 20,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: 250,
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: suggestions.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              leading: const Icon(Icons.location_on),
+                              title: Text(
+                                suggestions[index],
+                                style: TextStyle(
+                                  color: kHeadIconColor,
+                                ),
+                              ),
+                              onTap: () {
+                                city = suggestions[index];
+
+                                searchController.text = city;
+
+                                setState(() {
+                                  suggestions.clear();
+                                });
+
+                                FocusScope.of(context).unfocus();
+
+                                isReloadHappend = true;
+
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => const RefreshLoading(),
+                                );
+
+                                getSearchedData();
+                              },
+                            );
+                          },
                         ),
                       ),
-                      onTap: () {
-                        searchController.text = suggestions[index];
-
-                        setState(() {
-                          suggestions.clear();
-                        });
-                      },
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ),

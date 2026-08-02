@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:clima_weather/models/forecast_model.dart';
 import 'package:clima_weather/services/forecast_cache.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,6 +26,7 @@ class ForeCastPage extends StatefulWidget {
 
 class _ForeCastPageState extends State<ForeCastPage> {
   final TextEditingController searchController = TextEditingController();
+  final LayerLink _searchBarLink = LayerLink();
 
   bool isReloadHappend = false;
   late Timer ForecastLastUpdatedTimer;
@@ -120,7 +123,41 @@ class _ForeCastPageState extends State<ForeCastPage> {
 
     initializeForecast();
     loadForecastLastUpdated();
+    loadCities();
+    loadLastCity();
   }
+
+  Future<void> loadCities() async {
+    final String data = await rootBundle.loadString('assets/cities.json');
+
+    cities = List<String>.from(
+      jsonDecode(data),
+    );
+  }
+
+  void updateSuggestions(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        suggestions = [];
+      });
+      return;
+    }
+
+    setState(() {
+      suggestions = cities
+          .where(
+            (city) => city.toLowerCase().contains(query.toLowerCase()),
+          )
+          .take(8)
+          .toList();
+    });
+  }
+
+  // ======================================
+  // LOCATION SUGGEST
+  // ======================================
+  List<String> cities = [];
+  List<String> suggestions = [];
 
   // ======================================
   // SEARCH DATA
@@ -323,85 +360,92 @@ class _ForeCastPageState extends State<ForeCastPage> {
                             ),
                           ),
                           Expanded(
-                            child: Hero(
-                              tag: "searchBar",
-                              child: GlassContainer(
-                                blurStrength: 15,
-                                borderRadius: 30,
-                                child: SizedBox(
-                                  height: 25,
-                                  child: TextField(
-                                    controller: searchController,
-                                    onSubmitted: (value) async {
-                                      if (searchController.text == "") {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            behavior: SnackBarBehavior.floating,
-                                            backgroundColor: Colors.transparent,
-                                            elevation: 0,
-                                            content: Container(
-                                              height: 60,
-                                              decoration: BoxDecoration(
-                                                color: kGlassColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.15),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  const SizedBox(width: 12),
-                                                  Icon(
-                                                    Icons.close,
-                                                    color: kHeadIconColor,
+                            child: CompositedTransformTarget(
+                              link: _searchBarLink,
+                              child: Hero(
+                                tag: "searchBar",
+                                child: GlassContainer(
+                                  blurStrength: 15,
+                                  borderRadius: 30,
+                                  child: SizedBox(
+                                    height: 25,
+                                    child: TextField(
+                                      controller: searchController,
+                                      onChanged: updateSuggestions,
+                                      onSubmitted: (value) async {
+                                        if (searchController.text == "") {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              elevation: 0,
+                                              content: Container(
+                                                height: 60,
+                                                decoration: BoxDecoration(
+                                                  color: kGlassColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  border: Border.all(
+                                                    color: Colors.white
+                                                        .withValues(
+                                                            alpha: 0.15),
                                                   ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Text(
-                                                      "The Field Is Empty!",
-                                                      style: TextStyle(
-                                                        color: kHeadIconColor,
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(width: 12),
+                                                    Icon(
+                                                      Icons.close,
+                                                      color: kHeadIconColor,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: Text(
+                                                        "The Field Is Empty!",
+                                                        style: TextStyle(
+                                                          color: kHeadIconColor,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      } else {
-                                        isReloadHappend = true;
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            context = context;
-                                            return const RefreshLoading();
-                                          },
-                                        );
-                                        city = searchController.text;
-                                        final prefs = await SharedPreferences
-                                            .getInstance();
-                                        await prefs.setString(
-                                            "forecast_last_city", city);
-                                        getForecastData();
-                                      }
-                                    },
-                                    style: TextStyle(
-                                      color: kHeadIconColor,
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(Icons.calendar_today),
-                                      prefixIconColor: kHeadIconColor,
-                                      contentPadding:
-                                          EdgeInsets.fromLTRB(20, 0, 0, 10),
-                                      border: InputBorder.none,
-                                      hintText: "Search forecast city",
-                                      hintStyle: GoogleFonts.monda(
-                                        fontSize: 15,
+                                          );
+                                        } else {
+                                          isReloadHappend = true;
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              context = context;
+                                              return const RefreshLoading();
+                                            },
+                                          );
+                                          city = searchController.text;
+                                          final prefs = await SharedPreferences
+                                              .getInstance();
+                                          await prefs.setString(
+                                              "forecast_last_city", city);
+                                          getForecastData();
+                                        }
+                                      },
+                                      style: TextStyle(
                                         color: kHeadIconColor,
+                                      ),
+                                      decoration: InputDecoration(
+                                        prefixIcon: Icon(Icons.calendar_today),
+                                        prefixIconColor: kHeadIconColor,
+                                        contentPadding:
+                                            EdgeInsets.fromLTRB(20, 0, 0, 10),
+                                        border: InputBorder.none,
+                                        hintText: "Search forecast city",
+                                        hintStyle: GoogleFonts.monda(
+                                          fontSize: 15,
+                                          color: kHeadIconColor,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -526,6 +570,67 @@ class _ForeCastPageState extends State<ForeCastPage> {
               ),
             ),
           ),
+
+          //SUGGESTION PANEL
+          if (suggestions.isNotEmpty)
+            Positioned(
+              width: 280,
+              child: CompositedTransformFollower(
+                link: _searchBarLink,
+                showWhenUnlinked: false,
+                offset: const Offset(0, 60),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: GlassContainer(
+                      blurStrength: 15,
+                      borderRadius: 20,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: 250,
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: suggestions.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              leading: const Icon(Icons.location_on),
+                              title: Text(
+                                suggestions[index],
+                                style: TextStyle(
+                                  color: kHeadIconColor,
+                                ),
+                              ),
+                              onTap: () {
+                                city = suggestions[index];
+
+                                searchController.text = city;
+
+                                setState(() {
+                                  suggestions.clear();
+                                });
+
+                                FocusScope.of(context).unfocus();
+
+                                isReloadHappend = true;
+
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => const RefreshLoading(),
+                                );
+
+                                getForecastData();
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
