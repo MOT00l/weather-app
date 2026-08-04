@@ -15,8 +15,10 @@ import '../components/refresh_loading.dart';
 import '../models/drang_handle.dart';
 import '../models/search_models.dart';
 import '../services/networking.dart';
+import '../services/search_history_service.dart';
 import '../services/serach_cache.dart';
 import '../utilities/constants.dart';
+import '../utilities/country_formatter.dart';
 import '../utilities/search_icons.dart';
 
 class SearchPage extends StatefulWidget {
@@ -71,6 +73,7 @@ class _SearchPageState extends State<SearchPage>
   // ======================================
   List<String> cities = [];
   List<String> suggestions = [];
+  List<String> recentSearches = [];
 
   // ======================================
   // DETAILS CARD ANIMATION
@@ -143,6 +146,7 @@ class _SearchPageState extends State<SearchPage>
     initializeSearch();
     loadSearchLastUpdated();
     loadCities();
+    loadRecentSearches();
   }
 
   // ======================================
@@ -166,6 +170,19 @@ class _SearchPageState extends State<SearchPage>
 
     setState(() {
       searchLastUpdated = formatSearchLastUpdated(dateTime);
+    });
+  }
+
+  // ======================================
+  // RECENT SEARCH LOADER
+  // ======================================
+  Future<void> loadRecentSearches() async {
+    final history = await SearchHistoryService.getRecentSearches();
+
+    if (!mounted) return;
+
+    setState(() {
+      recentSearches = history;
     });
   }
 
@@ -216,14 +233,14 @@ class _SearchPageState extends State<SearchPage>
 
       return;
     }
+
     final code = searchData["current"]["condition"]["code"];
     final iconPath =
         "assets/weather-icons/${getWeatherApiPrefix(code)}${kWeatherApiIcons[code.toString()]!["icon"]}.svg";
     searchModel = SearchModel(
       temperatur: searchData["current"]["temp_c"],
-      location: searchData["location"]["name"] +
-          ", " +
-          searchData["location"]["country"],
+      location:
+          "${searchData["location"]["name"]}, ${formatCountry(searchData["location"]["country"])}",
       description: searchData["current"]["condition"]["text"],
       feelslike: searchData["current"]["feelslike_c"],
       humidity: searchData["current"]["humidity"],
@@ -238,6 +255,12 @@ class _SearchPageState extends State<SearchPage>
       uv: searchData["current"]["uv"],
       winddir: searchData["current"]["wind_dir"],
     );
+
+    await SearchHistoryService.addSearch(
+      searchData["location"]["name"],
+    );
+
+    await loadRecentSearches();
 
     await SearchCache.saveWeather(
       search_temp: searchModel.temperatur,
@@ -341,18 +364,33 @@ class _SearchPageState extends State<SearchPage>
   void updateSuggestions(String query) {
     if (query.isEmpty) {
       setState(() {
-        suggestions = [];
+        suggestions = List.from(recentSearches);
       });
+
       return;
     }
 
+    final matchingRecent = recentSearches
+        .where(
+          (city) => city.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+
+    final matchingCities = cities
+        .where(
+          (city) => city.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+
+    final merged = [
+      ...matchingRecent,
+      ...matchingCities,
+    ];
+
+    final unique = merged.toSet().toList();
+
     setState(() {
-      suggestions = cities
-          .where(
-            (city) => city.toLowerCase().contains(query.toLowerCase()),
-          )
-          .take(8)
-          .toList();
+      suggestions = unique.take(8).toList();
     });
   }
 
@@ -402,6 +440,10 @@ class _SearchPageState extends State<SearchPage>
                                     height: 25,
                                     child: TextField(
                                       controller: searchController,
+                                      onTap: () {
+                                        updateSuggestions(
+                                            searchController.text);
+                                      },
                                       onChanged: updateSuggestions,
                                       onSubmitted: (value) {
                                         if (searchController.text == "") {
@@ -456,6 +498,10 @@ class _SearchPageState extends State<SearchPage>
                                             },
                                           );
                                           city = searchController.text;
+                                          FocusScope.of(context).unfocus();
+                                          setState(() {
+                                            suggestions.clear();
+                                          });
                                           getSearchedData();
                                         }
                                       },
@@ -556,61 +602,81 @@ class _SearchPageState extends State<SearchPage>
 
           //SUGGESTION PANEL
           if (suggestions.isNotEmpty)
-            CompositedTransformFollower(
-              link: _searchBarLink,
-              showWhenUnlinked: false,
-              offset: const Offset(0, 60),
-              child: Material(
-                color: Colors.transparent,
-                child: Padding(
-                  padding: EdgeInsets.only(top: 10),
-                  child: SizedBox(
-                    width: 280,
-                    child: GlassContainer(
-                      blurStrength: 15,
-                      borderRadius: 20,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: 250,
-                        ),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: suggestions.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              leading: const Icon(Icons.location_on),
-                              title: Text(
-                                suggestions[index],
-                                style: TextStyle(
-                                  color: kHeadIconColor,
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+
+                  setState(() {
+                    suggestions.clear();
+                  });
+                },
+                child: Stack(
+                  children: [
+                    Positioned(
+                      width: 280,
+                      child: CompositedTransformFollower(
+                        link: _searchBarLink,
+                        showWhenUnlinked: false,
+                        offset: const Offset(0, 60),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: GestureDetector(
+                              onTap: () {},
+                              child: GlassContainer(
+                                blurStrength: 15,
+                                borderRadius: 20,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 250,
+                                  ),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: suggestions.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                        leading: const Icon(Icons.location_on),
+                                        title: Text(
+                                          suggestions[index],
+                                          style: TextStyle(
+                                            color: kHeadIconColor,
+                                          ),
+                                        ),
+                                        onTap: () async {
+                                          city = suggestions[index];
+
+                                          searchController.text = city;
+
+                                          setState(() {
+                                            suggestions.clear();
+                                          });
+
+                                          FocusScope.of(context).unfocus();
+
+                                          isReloadHappend = true;
+
+                                          showDialog(
+                                            context: context,
+                                            builder: (_) =>
+                                                const RefreshLoading(),
+                                          );
+
+                                          getSearchedData();
+                                        },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
-                              onTap: () {
-                                city = suggestions[index];
-
-                                searchController.text = city;
-
-                                setState(() {
-                                  suggestions.clear();
-                                });
-
-                                FocusScope.of(context).unfocus();
-
-                                isReloadHappend = true;
-
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => const RefreshLoading(),
-                                );
-
-                                getSearchedData();
-                              },
-                            );
-                          },
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

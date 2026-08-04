@@ -114,14 +114,14 @@ flutter run
 
 ## 🎯 Roadmap
 
-- [ ] Weather alerts
-- [ ] Dynamic weather animations
+- [x] Dynamic weather animations
 - [ ] Home screen widgets
 - [x] GPS location support
 - [ ] Favorite cities
 - [x] Dark & Light themes
-- [ ] Offline forecast support
+- [x] Offline forecast support
 - [x] Search suggestion 
+- [x] Recent search
 
 ---
 

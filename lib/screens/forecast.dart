@@ -14,7 +14,10 @@ import '../components/refresh_loading.dart';
 import '../components/temperature_graph.dart';
 import '../models/forecast_card.dart';
 import '../services/networking.dart';
+import '../services/search_history_service.dart';
 import '../utilities/constants.dart';
+import '../utilities/country_formatter.dart';
+import '../utilities/date_formatter.dart';
 import '../utilities/search_icons.dart';
 
 class ForeCastPage extends StatefulWidget {
@@ -124,7 +127,7 @@ class _ForeCastPageState extends State<ForeCastPage> {
     initializeForecast();
     loadForecastLastUpdated();
     loadCities();
-    loadLastCity();
+    loadRecentSearches();
   }
 
   Future<void> loadCities() async {
@@ -138,18 +141,33 @@ class _ForeCastPageState extends State<ForeCastPage> {
   void updateSuggestions(String query) {
     if (query.isEmpty) {
       setState(() {
-        suggestions = [];
+        suggestions = List.from(recentSearches);
       });
+
       return;
     }
 
+    final matchingRecent = recentSearches
+        .where(
+          (city) => city.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+
+    final matchingCities = cities
+        .where(
+          (city) => city.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+
+    final merged = [
+      ...matchingRecent,
+      ...matchingCities,
+    ];
+
+    final unique = merged.toSet().toList();
+
     setState(() {
-      suggestions = cities
-          .where(
-            (city) => city.toLowerCase().contains(query.toLowerCase()),
-          )
-          .take(8)
-          .toList();
+      suggestions = unique.take(8).toList();
     });
   }
 
@@ -158,12 +176,26 @@ class _ForeCastPageState extends State<ForeCastPage> {
   // ======================================
   List<String> cities = [];
   List<String> suggestions = [];
+  List<String> recentSearches = [];
 
   // ======================================
   // SEARCH DATA
   // ======================================
   Future<void> initializeForecast() async {
     await loadCachedForecast();
+  }
+
+  // ======================================
+  // RECENT SEARCH LOADER
+  // ======================================
+  Future<void> loadRecentSearches() async {
+    final history = await SearchHistoryService.getRecentSearches();
+
+    if (!mounted) return;
+
+    setState(() {
+      recentSearches = history;
+    });
   }
 
   void getForecastData() async {
@@ -234,11 +266,16 @@ class _ForeCastPageState extends State<ForeCastPage> {
         icon1: iconPath1,
         icon2: iconPath2,
         icon3: iconPath3,
-        location: forecastData["location"]["name"] +
-            ", " +
-            forecastData["location"]["country"],
+        location:
+            "${forecastData["location"]["name"]}, ${formatCountry(forecastData["location"]["country"])}",
       );
     });
+
+    await SearchHistoryService.addSearch(
+      forecastData["location"]["name"],
+    );
+
+    await loadRecentSearches();
 
     await ForecastCache.saveWeather(
       forecast_date1: forecastModel.date1,
@@ -308,16 +345,6 @@ class _ForeCastPageState extends State<ForeCastPage> {
     return true;
   }
 
-  Future<void> loadLastCity() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedCity = prefs.getString("forecast_last_city");
-
-    if (savedCity != null && savedCity.isNotEmpty) {
-      searchController.text = savedCity;
-      city = savedCity;
-    }
-  }
-
   @override
   void dispose() {
     ForecastLastUpdatedTimer.cancel();
@@ -371,6 +398,10 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                     height: 25,
                                     child: TextField(
                                       controller: searchController,
+                                      onTap: () {
+                                        updateSuggestions(
+                                            searchController.text);
+                                      },
                                       onChanged: updateSuggestions,
                                       onSubmitted: (value) async {
                                         if (searchController.text == "") {
@@ -425,10 +456,10 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                             },
                                           );
                                           city = searchController.text;
-                                          final prefs = await SharedPreferences
-                                              .getInstance();
-                                          await prefs.setString(
-                                              "forecast_last_city", city);
+                                          FocusScope.of(context).unfocus();
+                                          setState(() {
+                                            suggestions.clear();
+                                          });
                                           getForecastData();
                                         }
                                       },
@@ -509,8 +540,9 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                     children: [
                                       Expanded(
                                         child: ForecastDayCard(
-                                          date: forecastModel.date1 ??
-                                              "Loading...",
+                                          date: formatForecastDate(
+                                            forecastModel.date1 ?? "Loading...",
+                                          ),
                                           icon: forecastModel.icon1 ??
                                               "assets/weather-icons/wi-time-1.svg",
                                           maxTemp:
@@ -523,8 +555,9 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                       ),
                                       Expanded(
                                         child: ForecastDayCard(
-                                          date: forecastModel.date2 ??
-                                              "Loading...",
+                                          date: formatForecastDate(
+                                            forecastModel.date2 ?? "Loading...",
+                                          ),
                                           icon: forecastModel.icon2 ??
                                               "assets/weather-icons/wi-time-1.svg",
                                           maxTemp:
@@ -537,8 +570,9 @@ class _ForeCastPageState extends State<ForeCastPage> {
                                       ),
                                       Expanded(
                                         child: ForecastDayCard(
-                                          date: forecastModel.date3 ??
-                                              "Loading...",
+                                          date: formatForecastDate(
+                                            forecastModel.date3 ?? "Loading...",
+                                          ),
                                           icon: forecastModel.icon3 ??
                                               "assets/weather-icons/wi-time-1.svg",
                                           maxTemp:
@@ -573,61 +607,81 @@ class _ForeCastPageState extends State<ForeCastPage> {
 
           //SUGGESTION PANEL
           if (suggestions.isNotEmpty)
-            Positioned(
-              width: 280,
-              child: CompositedTransformFollower(
-                link: _searchBarLink,
-                showWhenUnlinked: false,
-                offset: const Offset(0, 60),
-                child: Material(
-                  color: Colors.transparent,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 10),
-                    child: GlassContainer(
-                      blurStrength: 15,
-                      borderRadius: 20,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: 250,
-                        ),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: suggestions.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              leading: const Icon(Icons.location_on),
-                              title: Text(
-                                suggestions[index],
-                                style: TextStyle(
-                                  color: kHeadIconColor,
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+
+                  setState(() {
+                    suggestions.clear();
+                  });
+                },
+                child: Stack(
+                  children: [
+                    Positioned(
+                      width: 280,
+                      child: CompositedTransformFollower(
+                        link: _searchBarLink,
+                        showWhenUnlinked: false,
+                        offset: const Offset(0, 60),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 10),
+                            child: GestureDetector(
+                              onTap: () {},
+                              child: GlassContainer(
+                                blurStrength: 15,
+                                borderRadius: 20,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 250,
+                                  ),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: suggestions.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                        leading: const Icon(Icons.location_on),
+                                        title: Text(
+                                          suggestions[index],
+                                          style: TextStyle(
+                                            color: kHeadIconColor,
+                                          ),
+                                        ),
+                                        onTap: () async {
+                                          city = suggestions[index];
+
+                                          searchController.text = city;
+
+                                          setState(() {
+                                            suggestions.clear();
+                                          });
+
+                                          FocusScope.of(context).unfocus();
+
+                                          isReloadHappend = true;
+
+                                          showDialog(
+                                            context: context,
+                                            builder: (_) =>
+                                                const RefreshLoading(),
+                                          );
+
+                                          getForecastData();
+                                        },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
-                              onTap: () {
-                                city = suggestions[index];
-
-                                searchController.text = city;
-
-                                setState(() {
-                                  suggestions.clear();
-                                });
-
-                                FocusScope.of(context).unfocus();
-
-                                isReloadHappend = true;
-
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => const RefreshLoading(),
-                                );
-
-                                getForecastData();
-                              },
-                            );
-                          },
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

@@ -7,7 +7,7 @@
 
 
     <application
-        android:label="clima_weather"
+        android:label="Clima"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
